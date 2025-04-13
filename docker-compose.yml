@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      DATABASE_HOST: cf980tnnkgv1bp.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com
+      DATABASE_NAME: dfnse4ufac6tev
+      DATABASE_USERNAME: u7vm0mnd87ht0m
+      DATABASE_PASSWORD: p7e379a8bd9415fff6ee73c78519f5a5428e9ad7d767f398b9e5be7f44ff3a0ee
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    build:
+      context: .
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server -b '0.0.0.0'"
+    volumes:
+      - .:/rails
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://postgres:password@db:5432/myapp_development
+      RAILS_ENV: development
+
+volumes:
+  db-data:
