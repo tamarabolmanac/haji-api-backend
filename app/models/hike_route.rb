@@ -1,0 +1,3 @@
+class HikeRoute < ApplicationRecord
+  
+end

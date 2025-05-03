@@ -4,30 +4,44 @@ services:
   db:
     image: postgres:14
     environment:
+      RAILS_ENV: development
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      DATABASE_HOST: cf980tnnkgv1bp.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com
-      DATABASE_NAME: dfnse4ufac6tev
-      DATABASE_USERNAME: u7vm0mnd87ht0m
-      DATABASE_PASSWORD: p7e379a8bd9415fff6ee73c78519f5a5428e9ad7d767f398b9e5be7f44ff3a0ee
+      DATABASE_HOST: ""
+      DATABASE_NAME: ""
+      DATABASE_USERNAME: ""
+      DATABASE_PASSWORD: ""
     volumes:
       - db-data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432" 
+    networks:
+      - hajki_shared_network
 
   web:
     build:
       context: .
-    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails server -b '0.0.0.0'"
+      dockerfile: Dockerfile.dev
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
     volumes:
-      - .:/rails
+      - .:/app
     depends_on:
       - db
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgres://postgres:password@db:5432/myapp_development
+      DATABASE_URL: postgres://postgres:password@db:5432/hajki_db_dev
       RAILS_ENV: development
+      AWS_ACCESS_KEY_ID: ""
+      AWS_SECRET_ACCESS_KEY_ID: ""
+      AWS_REGION: ""
+      AWS_BUCKET: hajki-api
+    networks:
+      - hajki_shared_network
+
+networks:
+  hajki_shared_network:
+    external: true
 
 volumes:
   db-data:

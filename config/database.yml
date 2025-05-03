@@ -17,11 +17,16 @@ default: &default
   encoding: unicode
   username: postgres
   password: password
-  host: db
+  host: localhost
 
 development:
-  <<: *default
-  database: hajki_api_development
+  adapter: postgresql
+  encoding: unicode
+  database: hajki_db_dev
+  username: postgres
+  password: password
+  host: localhost
+  port: 5432
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
