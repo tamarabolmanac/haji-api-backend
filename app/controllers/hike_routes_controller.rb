@@ -7,9 +7,6 @@ class HikeRoutesController < ApiController
   end
 
   def create
-    puts "TEST"
-    puts params
-
     @hike = HikeRoute.new(hike_params)
 
     if @hike.save
@@ -19,7 +16,17 @@ class HikeRoutesController < ApiController
     end
   end
 
+  def show
+    hike = HikeRoute.find_by(id: params[:id])
+  
+    if hike
+      render json: { data: hike, status: 200, message: "Success" }
+    else
+      render json: { status: 404, message: "Route not found" }
+    end
+  end
+
   def hike_params
-    params.permit(:title, :description)
+    params.permit(:title, :description, :duration, :difficulty, :distance, :location_latitude, :location_longitude, :best_time_to_visit)
   end
 end

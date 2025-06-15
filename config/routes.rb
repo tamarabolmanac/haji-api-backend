@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   
   get "/routes", to: "hike_routes#index"
+  get "/routes/:id", to: "hike_routes#show"
   post "/new_route", to: "hike_routes#create"
 
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
