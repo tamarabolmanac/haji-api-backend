@@ -8,6 +8,13 @@ Rails.application.routes.draw do
   get "/routes/:id", to: "hike_routes#show"
   post "/new_route", to: "hike_routes#create"
 
+  # Authentication routes
+  post "/auth/register", to: "auth#register"
+  post "/auth/login", to: "auth#login"
+  
+  # User routes
+  get "/users/:id", to: "users#show"
+
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
