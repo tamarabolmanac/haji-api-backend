@@ -23,6 +23,3 @@ services:
 networks:
   hajki_shared_network:
     external: true
-
-volumes:
-  db-data:
