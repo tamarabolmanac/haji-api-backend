@@ -3,10 +3,19 @@ class AuthController < ApplicationController
   skip_before_action :verify_authenticity_token
 
   def register
-    puts params
-    user = User.new(user_params)
+    user = User.new(
+      name: user_params[:name],
+      email: user_params[:email],
+      password: user_params[:password],
+      password_confirmation: user_params[:password_confirmation],
+      role: user_params[:role],
+      city: user_params[:city],
+      country: user_params[:country]
+    )
     
     if user.save
+      Rails.logger.info "User created: #{user.inspect}"
+      Rails.logger.info "Password digest: #{user.password_digest}"
       token = generate_token(user.id)
       render json: { 
         status: 200, 
@@ -14,6 +23,7 @@ class AuthController < ApplicationController
         token: token
       }
     else
+      Rails.logger.info "Registration errors: #{user.errors.full_messages.join(', ')}"
       render json: { 
         status: 400, 
         message: user.errors.full_messages.join(', ')
@@ -23,18 +33,19 @@ class AuthController < ApplicationController
 
   def login
     user = User.find_by(email: login_params[:email])
-    pp "Test login"
-    pp user
+    Rails.logger.info "User: #{user.inspect}"
+    Rails.logger.info "Login params: #{login_params.inspect}"
+    Rails.logger.info "Password digest: #{user.password_digest}"
     if user && user.authenticate(login_params[:password])
-      pp "Render success"
-      token = generate_token(user)
+      Rails.logger.info "Authentication successful"
+      token = JwtAuthenticator.new.encode(user)
+      Rails.logger.info "Generated token: #{token}"
       render json: { 
         status: 200, 
         message: "User logged in successfully",
         token: token
       }
     else
-      pp 'Render fail'
       render json: { 
         status: 401, 
         message: "Invalid credentials"

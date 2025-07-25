@@ -13,7 +13,7 @@ Rails.application.routes.draw do
   post "/auth/login", to: "auth#login"
   
   # User routes
-  get "/users/:id", to: "users#show"
+  get "/user_data", to: "users#user_data"
 
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest

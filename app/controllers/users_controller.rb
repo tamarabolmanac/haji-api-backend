@@ -1,9 +1,17 @@
 class UsersController < ApplicationController
-  before_action :authenticate_user, only: [:show]
+  include Utils
+  before_action :authenticate_user, only: [:user_data]
 
-  def show
-    user = User.find(params[:id])
-    render json: user, status: :ok
+  def user_data
+    user_data = {
+      id: @current_user.id,
+      name: @current_user.name,
+      email: @current_user.email,
+      role: @current_user.role,
+      city: @current_user.city,
+      country: @current_user.country
+    }
+    render json: user_data, status: :ok
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'User not found' }, status: :not_found
   end
