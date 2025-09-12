@@ -11,7 +11,7 @@
     config.action_cable.url = nil
     config.action_cable.allowed_request_origins = []
 
-    config.active_storage.service = :local
+    config.active_storage.service = :r2
 
     # Eager load code on boot for better performance and memory savings (ignored by Rake tasks).
     config.eager_load = true

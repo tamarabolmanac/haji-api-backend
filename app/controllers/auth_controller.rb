@@ -16,7 +16,7 @@ class AuthController < ApplicationController
     if user.save
       Rails.logger.info "User created: #{user.inspect}"
       Rails.logger.info "Password digest: #{user.password_digest}"
-      token = generate_token(user.id)
+      token = generate_token(user)
       render json: { 
         status: 200, 
         message: "User registered successfully",
