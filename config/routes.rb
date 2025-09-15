@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   
   get "/routes", to: "hike_routes#index"
   get "/routes/:id", to: "hike_routes#show"
+  get "/my_routes", to: "hike_routes#my_routes"
   post "/new_route", to: "hike_routes#create"
 
   # Authentication routes

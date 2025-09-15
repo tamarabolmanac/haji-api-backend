@@ -1,12 +1,21 @@
 
 class HikeRoutesController < ApiController
   include Rails.application.routes.url_helpers
-  before_action :authenticate_user
+  before_action :authenticate_user, except: [:index, :show]
   
   def index
     hike_routes = HikeRoute.all
 
     render json: { data: hike_routes, status: 200, message: "Success" }
+  end
+
+  def my_routes
+    Rails.logger.info "Current user: #{@current_user.inspect}"
+    user_routes = @current_user.hike_routes
+    Rails.logger.info "User routes count: #{user_routes.count}"
+    Rails.logger.info "User routes: #{user_routes.inspect}"
+
+    render json: { data: user_routes, status: 200, message: "Success" }
   end
 
   def create
