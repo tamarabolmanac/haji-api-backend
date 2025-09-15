@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_11_114119) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_15_044128) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -53,6 +53,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_11_114119) do
     t.decimal "location_latitude", precision: 10, scale: 6
     t.decimal "location_longitude", precision: 10, scale: 6
     t.string "best_time_to_visit"
+    t.bigint "user_id"
+    t.index ["user_id"], name: "index_hike_routes_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -70,4 +72,5 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_11_114119) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "hike_routes", "users"
 end

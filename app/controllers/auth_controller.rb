@@ -1,6 +1,5 @@
-class AuthController < ApplicationController
+class AuthController < ActionController::API
   include Utils
-  skip_before_action :verify_authenticity_token
 
   def register
     user = User.new(
@@ -14,8 +13,7 @@ class AuthController < ApplicationController
     )
     
     if user.save
-      Rails.logger.info "User created: #{user.inspect}"
-      Rails.logger.info "Password digest: #{user.password_digest}"
+      Rails.logger.info "User created successfully: #{user.email}"
       token = generate_token(user)
       render json: { 
         status: 200, 
@@ -23,7 +21,6 @@ class AuthController < ApplicationController
         token: token
       }
     else
-      Rails.logger.info "Registration errors: #{user.errors.full_messages.join(', ')}"
       render json: { 
         status: 400, 
         message: user.errors.full_messages.join(', ')
@@ -33,9 +30,6 @@ class AuthController < ApplicationController
 
   def login
     user = User.find_by(email: login_params[:email])
-    Rails.logger.info "User: #{user.inspect}"
-    Rails.logger.info "Login params: #{login_params.inspect}"
-    Rails.logger.info "Password digest: #{user.password_digest}"
     if user && user.authenticate(login_params[:password])
       Rails.logger.info "Authentication successful"
       token = JwtAuthenticator.new.encode(user)

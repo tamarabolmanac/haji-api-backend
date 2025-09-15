@@ -1,6 +1,7 @@
 
 class HikeRoutesController < ApiController
   include Rails.application.routes.url_helpers
+  before_action :authenticate_user
   
   def index
     hike_routes = HikeRoute.all
@@ -9,7 +10,7 @@ class HikeRoutesController < ApiController
   end
 
   def create
-    @hike_route = HikeRoute.new(hike_params.except(:images))
+    @hike_route = @current_user.hike_routes.build(hike_params.except(:images))
   
     if @hike_route.save
       if params[:hike_route][:images].present?

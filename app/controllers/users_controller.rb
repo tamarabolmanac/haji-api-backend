@@ -1,4 +1,4 @@
-class UsersController < ApplicationController
+class UsersController < ApiController
   include Utils
   before_action :authenticate_user, only: [:user_data]
 
