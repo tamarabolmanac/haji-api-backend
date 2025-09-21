@@ -24,6 +24,15 @@
 
     config.active_storage.service = :r2
 
+    # Config for Redis
+    config.cache_store = :redis_cache_store, {
+      url: ENV.fetch("REDIS_URL") { "redis://redis:6379/1" }
+    }
+
+    config.action_controller.perform_caching = true
+    config.action_controller.enable_fragment_cache_logging = true
+
+
     # Eager load code on boot for better performance and memory savings (ignored by Rake tasks).
     config.eager_load = true
 

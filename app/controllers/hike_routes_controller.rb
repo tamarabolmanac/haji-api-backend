@@ -1,4 +1,6 @@
 
+require "aws-sdk-s3"
+
 class HikeRoutesController < ApiController
   include Rails.application.routes.url_helpers
   before_action :authenticate_user, except: [:index, :show]
@@ -36,24 +38,30 @@ class HikeRoutesController < ApiController
     end
   end
   
-  
   def show
     hike = HikeRoute.find_by(id: params[:id])
-  
+
     if hike
-      render json: {
-        data: hike.as_json.merge(
-          image_urls: hike.images.attached? ? hike.images.map { |img|
-            presigned_url(img)
-          } : []
-        ),
-        status: 200,
-        message: "Success"
-      } 
+      cache_key = "hike:#{hike.id}"
+      data = Rails.cache.fetch(cache_key, expires_in: 10.minutes) do
+
+        {
+          data: hike.as_json.merge(
+            image_urls: hike.images.attached? ? hike.images.map { |img|
+              presigned_url(img)  # tvoj metod za AWS R2
+            } : []
+          ),
+          status: 200,
+          message: "Success"
+        }
+      end
+
+      render json: data
     else
       render json: { status: 404, message: "Route not found" }
     end
   end
+  
 
   private
 

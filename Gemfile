@@ -18,6 +18,8 @@ gem "stimulus-rails"
 gem "jbuilder"
 gem 'jwt'
 
+gem "redis"
+
 gem "bcrypt", "~> 3.1.19"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
