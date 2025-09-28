@@ -5,7 +5,7 @@ class UserMailer < ApplicationMailer
     @user = user
     @confirmation_token = confirmation_token
 
-    mail to: @user.email, subject: "Confirmation Instructions"
+    mail to: @user.email, subject: "Hajki account confirmation Instructions"
   end
 
   def reset_password(user, confirmation_token)

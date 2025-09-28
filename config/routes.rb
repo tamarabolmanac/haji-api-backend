@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   
   # User routes
   get "/user_data", to: "users#user_data"
+  get "/users/confirm/:token", to: "users#confirm"
 
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
