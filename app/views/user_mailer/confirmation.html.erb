@@ -1,0 +1,37 @@
+<!-- app/views/user_mailer/confirmation.html.erb -->
+<!DOCTYPE html>
+<html>
+  <body style="font-family: Arial, sans-serif; color: #333;">
+    <h2>Welcome to Hajki 🌿</h2>
+    <p>
+      Hi <%= @user.name.presence || "explorer" %>,<br><br>
+      Thanks for joining our community of hikers and nature lovers!
+    </p>
+
+    <p>
+      Please confirm your email address by clicking the button below:
+    </p>
+
+    <p style="margin: 20px 0;">
+      <a href="https://hajki.com/confirm?token=<%= @user.signed_id %>"
+         style="background-color:#2d6a4f; color:#fff; padding:12px 20px; 
+                text-decoration:none; border-radius:6px; font-weight:bold;">
+        Confirm My Account
+      </a>
+    </p>
+
+    <p>
+      Once confirmed, you’ll be able to explore routes, share your hikes, and connect with other adventurers.  
+    </p>
+
+    <p>
+      If you didn’t create an account on Hajki, you can safely ignore this email.  
+    </p>
+
+    <hr style="margin-top:30px;">
+    <small>
+      Sent with ❤️ from Hajki.com<br>
+      You’re receiving this email because you signed up for Hajki.
+    </small>
+  </body>
+</html>

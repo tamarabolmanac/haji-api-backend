@@ -15,4 +15,15 @@ class UsersController < ApiController
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'User not found' }, status: :not_found
   end
+
+  def confirm
+    @user = User.find_signed(params[:token])
+
+    if @user.present?
+      @user.confirm!
+      render json: { message: "Your account has been confirmed." }, status: :ok
+    else
+      render json: { message: "Invalid token." }, status: :unprocessable_entity
+    end
+  end
 end

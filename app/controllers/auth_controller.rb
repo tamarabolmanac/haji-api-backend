@@ -14,18 +14,37 @@ class AuthController < ActionController::API
     
     if user.save
       Rails.logger.info "User created successfully: #{user.email}"
+      user.send_confirmation_email!
+
       token = generate_token(user)
       render json: { 
         status: 200, 
         message: "User registered successfully",
         token: token
-      }
+      }, status: :ok
     else
-      render json: { 
-        status: 400, 
-        message: user.errors.full_messages.join(', ')
-      }
+      # Validation failed - return detailed errors
+      render json: {
+        status: 422,
+        message: "Registracija neuspešna",
+        errors: user.errors.full_messages
+      }, status: :unprocessable_entity
     end
+  rescue ActiveRecord::RecordInvalid => e
+    # Handle any accidental bang-method calls inside model callbacks
+    Rails.logger.error "Registration failed (RecordInvalid): #{e.record.errors.full_messages.join(', ')}"
+    render json: {
+      status: 422,
+      message: "Registracija neuspešna",
+      errors: e.record.errors.full_messages.presence || [e.message]
+    }, status: :unprocessable_entity
+  rescue => e
+    Rails.logger.error "Registration failed (Exception): #{e.class} - #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}"
+    render json: {
+      status: 500,
+      message: "Greška servera",
+      error: e.message
+    }, status: :internal_server_error
   end
 
   def login
