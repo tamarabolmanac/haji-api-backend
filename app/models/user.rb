@@ -17,6 +17,14 @@ class User < ApplicationRecord
     UserMailer.confirmation(self, generate_confirmation_token).deliver_now
   end
 
+  def confirm!
+    update!(email_confirmed_at: Time.current)
+  end
+
+  def confirmed?
+    email_confirmed_at.present?
+  end
+
   private
 
   def generate_confirmation_token

@@ -2,6 +2,15 @@ class AuthController < ActionController::API
   include Utils
 
   def register
+    # Explicit check for duplicate email to return a clear, specific message
+    if User.exists?(email: user_params[:email])
+      return render json: {
+        status: 409,
+        message: "Korisnik sa ovom email adresom već postoji",
+        errors: ["Email je već zauzet"]
+      }, status: :conflict
+    end
+
     user = User.new(
       name: user_params[:name],
       email: user_params[:email],
