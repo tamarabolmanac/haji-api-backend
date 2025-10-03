@@ -58,15 +58,23 @@ class AuthController < ActionController::API
 
   def login
     user = User.find_by(email: login_params[:email])
+
     if user && user.authenticate(login_params[:password])
-      Rails.logger.info "Authentication successful"
-      token = JwtAuthenticator.new.encode(user)
-      Rails.logger.info "Generated token: #{token}"
-      render json: { 
-        status: 200, 
-        message: "User logged in successfully",
-        token: token
-      }
+      if !user.confirmed?
+        return render json: { 
+          status: 401, 
+          message: "User not confirmed"
+        }
+      else
+        Rails.logger.info "Authentication successful"
+        token = JwtAuthenticator.new.encode(user)
+        Rails.logger.info "Generated token: #{token}"
+        render json: { 
+          status: 200, 
+          message: "User logged in successfully",
+          token: token
+        }
+      end
     else
       render json: { 
         status: 401, 

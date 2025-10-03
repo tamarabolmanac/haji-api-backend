@@ -19,8 +19,7 @@ class UsersController < ApiController
   def confirm
     @user = User.find_signed(params[:token])
 
-    if @user.present?
-      @user.confirm!
+    if @user.present? && @user.confirm!
       render json: { message: "Your account has been confirmed." }, status: :ok
     else
       render json: { message: "Invalid token." }, status: :unprocessable_entity
