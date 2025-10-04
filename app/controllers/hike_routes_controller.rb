@@ -61,6 +61,27 @@ class HikeRoutesController < ApiController
       render json: { status: 404, message: "Route not found" }
     end
   end
+
+  def destroy
+    hike_route = @current_user.hike_routes.find_by(id: params[:id])
+    
+    if hike_route
+      # Delete associated images from storage
+      if hike_route.images.attached?
+        hike_route.images.purge
+      end
+      
+      # Delete the route
+      hike_route.destroy
+      
+      render json: { status: 200, message: "Ruta je uspešno obrisana" }
+    else
+      render json: { status: 404, message: "Ruta nije pronađena ili nemate dozvolu za brisanje" }
+    end
+  rescue => e
+    Rails.logger.error "Error deleting route: #{e.message}"
+    render json: { status: 500, message: "Greška pri brisanju rute" }
+  end
   
 
   private

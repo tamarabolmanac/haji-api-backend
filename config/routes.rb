@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   get "/routes/:id", to: "hike_routes#show"
   get "/my_routes", to: "hike_routes#my_routes"
   post "/new_route", to: "hike_routes#create"
+  delete "/routes/:id", to: "hike_routes#destroy"
 
   # Authentication routes
   post "/auth/register", to: "auth#register"
