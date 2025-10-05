@@ -7,7 +7,6 @@ class HikeRoutesController < ApiController
   
   def index
     hike_routes = HikeRoute.all
-
     render json: { data: hike_routes, status: 200, message: "Success" }
   end
 
@@ -39,7 +38,7 @@ class HikeRoutesController < ApiController
   end
   
   def show
-    hike = HikeRoute.find_by(id: params[:id])
+    hike = HikeRoute.includes(:points).find_by(id: params[:id])
 
     if hike
       cache_key = "hike:#{hike.id}"
@@ -49,7 +48,10 @@ class HikeRoutesController < ApiController
           data: hike.as_json.merge(
             image_urls: hike.images.attached? ? hike.images.map { |img|
               presigned_url(img)  # tvoj metod za AWS R2
-            } : []
+            } : [],
+            points: hike.points.order(:timestamp).map do |p|
+              { lat: p.lat, lng: p.lng, timestamp: p.timestamp }
+            end
           ),
           status: 200,
           message: "Success"
@@ -81,6 +83,46 @@ class HikeRoutesController < ApiController
   rescue => e
     Rails.logger.error "Error deleting route: #{e.message}"
     render json: { status: 500, message: "Greška pri brisanju rute" }
+  end
+
+  def track_point
+    hike_route = HikeRoute.find_by(id: params[:route_id])
+    
+    if hike_route.nil?
+      render json: { status: 404, message: "Route not found" }
+      return
+    end
+
+    # Create tracking point associated with the route
+    point = hike_route.points.build(
+      lat: params[:latitude],
+      lng: params[:longitude],
+      accuracy: params[:accuracy],
+      timestamp: params[:timestamp] || Time.current,
+      user: @current_user
+    )
+
+    if point.save
+      render json: { 
+        status: 200, 
+        message: "Point saved successfully",
+        point: {
+          id: point.id,
+          lat: point.lat,
+          lng: point.lng,
+          timestamp: point.timestamp
+        }
+      }
+    else
+      render json: { 
+        status: 422, 
+        message: "Failed to save point",
+        errors: point.errors.full_messages
+      }
+    end
+  rescue => e
+    Rails.logger.error "Error saving tracking point: #{e.message}"
+    render json: { status: 500, message: "Server error while saving point" }
   end
   
 
