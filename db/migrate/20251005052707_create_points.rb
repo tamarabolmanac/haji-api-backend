@@ -4,7 +4,7 @@ class CreatePoints < ActiveRecord::Migration[8.0]
       t.float :lat
       t.float :lng
       t.bigint :timestamp
-      t.references :hike_routes, null: false, foreign_key: true
+      t.references :hike_route, null: false, foreign_key: true
 
       t.timestamps
     end
