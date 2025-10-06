@@ -60,12 +60,12 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_05_052707) do
   create_table "points", force: :cascade do |t|
     t.float "lat"
     t.float "lng"
-    t.bigint "timestamp"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "timestamp"
+    t.float "accuracy"
     t.bigint "hike_route_id", null: false
     t.bigint "user_id"
-    t.float "accuracy"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
     t.index ["hike_route_id"], name: "index_points_on_hike_route_id"
     t.index ["user_id"], name: "index_points_on_user_id"
   end
