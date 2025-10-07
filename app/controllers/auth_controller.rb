@@ -72,7 +72,8 @@ class AuthController < ActionController::API
         render json: { 
           status: 200, 
           message: "User logged in successfully",
-          token: token
+          token: token,
+          user_id: user.id
         }
       end
     else

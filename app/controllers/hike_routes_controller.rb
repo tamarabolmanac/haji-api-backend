@@ -93,13 +93,18 @@ class HikeRoutesController < ApiController
       return
     end
 
+    #if hike_route.user_id != current_user.id
+    #  render json: { status: 404, message: "You cannot edit route from another user" }
+    #  return
+    #end
+
     # Create tracking point associated with the route
     point = hike_route.points.build(
       lat: params[:latitude],
       lng: params[:longitude],
-      accuracy: params[:accuracy],
-      timestamp: params[:timestamp] || Time.current,
-      user: @current_user
+      # accuracy: params[:accuracy],  # TODO: Add after migration
+      timestamp: params[:timestamp] || Time.current
+      # user: @current_user  # TODO: Add after migration (currently nil)
     )
 
     if point.save
