@@ -86,48 +86,65 @@ class HikeRoutesController < ApiController
   end
 
   def track_point
-    hike_route = HikeRoute.find_by(id: params[:route_id])
-    
-    if hike_route.nil?
-      render json: { status: 404, message: "Route not found" }
-      return
-    end
+    begin
+      if params[:route_id].nil?
+        # Create new route for tracking
+        hike_route = @current_user.hike_routes.create!(
+          title: "Nova ruta #{Time.current.strftime('%d.%m.%Y %H:%M')}",
+          description: "Automatski kreirana ruta tokom praćenja",
+          difficulty: "medium",
+          duration: 0,
+          distance: 0
+        )
+        Rails.logger.info "Created new route with ID: #{hike_route.id}"
+      else
+        # Use existing route
+        hike_route = HikeRoute.find(params[:route_id])
+        
+        # Check if user owns the route
+        if hike_route.user_id != @current_user.id
+          render json: { status: 403, message: "You cannot edit route from another user" }
+          return
+        end
+      end
 
-    #if hike_route.user_id != current_user.id
-    #  render json: { status: 404, message: "You cannot edit route from another user" }
-    #  return
-    #end
+      # Create tracking point
+      point = hike_route.points.build(
+        lat: params[:latitude],
+        lng: params[:longitude],
+        # accuracy: params[:accuracy],  # TODO: Add after migration
+        timestamp: params[:timestamp] || Time.current
+        # user: @current_user  # TODO: Add after migration (currently nil)
+      )
 
-    # Create tracking point associated with the route
-    point = hike_route.points.build(
-      lat: params[:latitude],
-      lng: params[:longitude],
-      # accuracy: params[:accuracy],  # TODO: Add after migration
-      timestamp: params[:timestamp] || Time.current
-      # user: @current_user  # TODO: Add after migration (currently nil)
-    )
-
-    if point.save
-      render json: { 
-        status: 200, 
-        message: "Point saved successfully",
-        point: {
-          id: point.id,
-          lat: point.lat,
-          lng: point.lng,
-          timestamp: point.timestamp
+      if point.save
+        Rails.cache.delete("hike:#{hike_route.id}")
+        Rails.logger.info "Cache invalidated for route #{hike_route.id}"
+        
+        render json: { 
+          status: 200, 
+          message: "Point saved successfully",
+          route_id: hike_route.id,  # Return route_id for frontend
+          point: {
+            id: point.id,
+            lat: point.lat,
+            lng: point.lng,
+            timestamp: point.timestamp
+          }
         }
-      }
-    else
-      render json: { 
-        status: 422, 
-        message: "Failed to save point",
-        errors: point.errors.full_messages
-      }
+      else
+        render json: { 
+          status: 422, 
+          message: "Failed to save point",
+          errors: point.errors.full_messages
+        }
+      end
+    rescue ActiveRecord::RecordNotFound
+      render json: { status: 404, message: "Route not found" }
+    rescue => e
+      Rails.logger.error "Error in track_point: #{e.message}"
+      render json: { status: 500, message: "Internal server error" }
     end
-  rescue => e
-    Rails.logger.error "Error saving tracking point: #{e.message}"
-    render json: { status: 500, message: "Server error while saving point" }
   end
   
 
