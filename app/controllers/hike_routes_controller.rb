@@ -64,6 +64,32 @@ class HikeRoutesController < ApiController
     end
   end
 
+  def update
+    hike_route = @current_user.hike_routes.find_by(id: params[:id])
+    
+    if hike_route.nil?
+      render json: { status: 404, message: "Route not found or you don't have permission to edit it" }
+      return
+    end
+
+    if hike_route.update(hike_params)
+      render json: { 
+        status: 200, 
+        message: "Route updated successfully",
+        data: hike_route
+      }
+    else
+      render json: { 
+        status: 422, 
+        message: "Failed to update route",
+        errors: hike_route.errors.full_messages
+      }
+    end
+  rescue => e
+    Rails.logger.error "Error updating route: #{e.message}"
+    render json: { status: 500, message: "Server error while updating route" }
+  end
+
   def destroy
     hike_route = @current_user.hike_routes.find_by(id: params[:id])
     
