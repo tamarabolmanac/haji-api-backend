@@ -6,15 +6,28 @@ class HikeRoutesController < ApiController
   before_action :authenticate_user, except: [:index, :show]
   
   def index
-    hike_routes = HikeRoute.all
+    hike_routes = HikeRoute.includes(:points).all.map do |route|
+      route.as_json.merge(
+        distance: route.display_distance,
+        duration: route.display_duration,
+        calculated_from_points: route.points.count >= 2,
+        points_count: route.points.count
+      )
+    end
     render json: { data: hike_routes, status: 200, message: "Success" }
   end
 
   def my_routes
     Rails.logger.info "Current user: #{@current_user.inspect}"
-    user_routes = @current_user.hike_routes
+    user_routes = @current_user.hike_routes.includes(:points).map do |route|
+      route.as_json.merge(
+        distance: route.display_distance,
+        duration: route.display_duration,
+        calculated_from_points: route.points.count >= 2,
+        points_count: route.points.count
+      )
+    end
     Rails.logger.info "User routes count: #{user_routes.count}"
-    Rails.logger.info "User routes: #{user_routes.inspect}"
 
     render json: { data: user_routes, status: 200, message: "Success" }
   end
@@ -46,6 +59,12 @@ class HikeRoutesController < ApiController
 
         {
           data: hike.as_json.merge(
+            # Override distance and duration with calculated values
+            distance: hike.display_distance,
+            duration: hike.display_duration,
+            # Add metadata about calculation
+            calculated_from_points: hike.points.count >= 2,
+            points_count: hike.points.count,
             image_urls: hike.images.attached? ? hike.images.map { |img|
               presigned_url(img)  # tvoj metod za AWS R2
             } : [],
@@ -113,7 +132,7 @@ class HikeRoutesController < ApiController
 
   def track_point
     begin
-      if params[:route_id].nil?
+      if params[:route_id].nil? || params[:route_id] == "null"
         # Create new route for tracking
         hike_route = @current_user.hike_routes.create!(
           title: "Nova ruta #{Time.current.strftime('%d.%m.%Y %H:%M')}",
@@ -147,6 +166,14 @@ class HikeRoutesController < ApiController
         Rails.cache.delete("hike:#{hike_route.id}")
         Rails.logger.info "Cache invalidated for route #{hike_route.id}"
         
+        # Auto-update route distance and duration if we have enough points
+        if hike_route.points.count >= 2
+          hike_route.update_columns(
+            distance: hike_route.calculated_distance,
+            duration: hike_route.calculated_duration
+          )
+        end
+        
         render json: { 
           status: 200, 
           message: "Point saved successfully",
@@ -156,6 +183,13 @@ class HikeRoutesController < ApiController
             lat: point.lat,
             lng: point.lng,
             timestamp: point.timestamp
+          },
+          # Return updated route stats
+          route_stats: {
+            distance: hike_route.display_distance,
+            duration: hike_route.display_duration,
+            points_count: hike_route.points.count,
+            calculated_from_points: hike_route.points.count >= 2
           }
         }
       else
