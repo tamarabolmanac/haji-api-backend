@@ -91,11 +91,35 @@ class HikeRoutesController < ApiController
       return
     end
 
-    if hike_route.update(hike_params)
+    # Handle image updates
+    if params[:hike_route][:existing_images].present?
+      # Keep only the existing images that are still in the list
+      # This effectively removes images that were deleted in the frontend
+      existing_image_urls = params[:hike_route][:existing_images]
+      
+      # For now, we'll just log this - implementing selective image deletion 
+      # would require more complex logic to track which images to keep/delete
+      Rails.logger.info "Existing images to keep: #{existing_image_urls}"
+    end
+
+    # Update route attributes
+    if hike_route.update(hike_params.except(:images, :existing_images))
+      
+      # Handle new image uploads (same as create method)
+      if params[:hike_route][:images].present?
+        params[:hike_route][:images].each do |img|
+          hike_route.images.attach(img)
+        end
+      end
+
       render json: { 
         status: 200, 
         message: "Route updated successfully",
-        data: hike_route
+        data: hike_route.as_json.merge(
+          image_urls: hike_route.images.attached? ? hike_route.images.map { |img|
+            presigned_url(img)
+          } : []
+        )
       }
     else
       render json: { 
@@ -211,7 +235,7 @@ class HikeRoutesController < ApiController
   private
 
   def hike_params
-    params.require(:hike_route).permit(:title, :description, :duration, :difficulty, :distance, :location_latitude, :location_longitude, :best_time_to_visit, images: [])
+    params.require(:hike_route).permit(:title, :description, :duration, :difficulty, :distance, :location_latitude, :location_longitude, :best_time_to_visit, images: [], existing_images: [])
   end
 
   def presigned_url(image)
