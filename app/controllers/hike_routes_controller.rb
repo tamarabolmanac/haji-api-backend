@@ -52,7 +52,6 @@ class HikeRoutesController < ApiController
   
   def show
     hike = HikeRoute.includes(:points).find_by(id: params[:id])
-
     if hike
       cache_key = "hike:#{hike.id}"
       data = Rails.cache.fetch(cache_key, expires_in: 10.minutes) do
@@ -68,6 +67,8 @@ class HikeRoutesController < ApiController
             image_urls: hike.images.attached? ? hike.images.map { |img|
               presigned_url(img)  # tvoj metod za AWS R2
             } : [],
+            # Add image IDs for deletion tracking
+            image_ids: hike.images.attached? ? hike.images.map(&:id) : [],
             points: hike.points.order(:timestamp).map do |p|
               { lat: p.lat, lng: p.lng, timestamp: p.timestamp }
             end
@@ -91,21 +92,41 @@ class HikeRoutesController < ApiController
       return
     end
 
-    # Handle image updates
-    if params[:hike_route][:existing_images].present?
-      # Keep only the existing images that are still in the list
-      # This effectively removes images that were deleted in the frontend
-      existing_image_urls = params[:hike_route][:existing_images]
+    # Handle image deletion
+    Rails.logger.info "Delete all images param: #{params[:hike_route][:delete_all_images]}"
+    Rails.logger.info "Existing image IDs param: #{params[:hike_route][:existing_image_ids].inspect}"
+    
+    if params[:hike_route][:delete_all_images] == 'true'
+      # Delete all existing images
+      Rails.logger.info "Deleting all images - delete_all_images flag set"
+      hike_route.images.purge_later if hike_route.images.attached?
+    elsif params[:hike_route][:existing_image_ids].present?
+      # Keep only the specified images, delete the rest
+      existing_image_ids = params[:hike_route][:existing_image_ids].map(&:to_i)
       
-      # For now, we'll just log this - implementing selective image deletion 
-      # would require more complex logic to track which images to keep/delete
-      Rails.logger.info "Existing images to keep: #{existing_image_urls}"
+      # Get current image IDs
+      current_image_ids = hike_route.images.attached? ? hike_route.images.map(&:id) : []
+      
+      Rails.logger.info "Current image IDs: #{current_image_ids}"
+      Rails.logger.info "Existing image IDs to keep: #{existing_image_ids}"
+      
+      # Find images to delete (current images that are not in the existing list)
+      image_ids_to_delete = current_image_ids - existing_image_ids
+      
+      Rails.logger.info "Image IDs to delete: #{image_ids_to_delete}"
+      
+      # Delete images that are not in the existing list
+      if image_ids_to_delete.any?
+        hike_route.images.each do |image|
+          if image_ids_to_delete.include?(image.id)
+            Rails.logger.info "Deleting image with ID: #{image.id}"
+            image.purge
+          end
+        end
+      end
     end
 
-    # Update route attributes
-    if hike_route.update(hike_params.except(:images, :existing_images))
-      
-      # Handle new image uploads (same as create method)
+    if hike_route.update(hike_params.except(:images, :existing_images, :existing_image_ids, :delete_all_images))
       if params[:hike_route][:images].present?
         params[:hike_route][:images].each do |img|
           hike_route.images.attach(img)
@@ -137,12 +158,10 @@ class HikeRoutesController < ApiController
     hike_route = @current_user.hike_routes.find_by(id: params[:id])
     
     if hike_route
-      # Delete associated images from storage
       if hike_route.images.attached?
         hike_route.images.purge
       end
       
-      # Delete the route
       hike_route.destroy
       
       render json: { status: 200, message: "Ruta je uspešno obrisana" }
@@ -157,7 +176,6 @@ class HikeRoutesController < ApiController
   def track_point
     begin
       if params[:route_id].nil? || params[:route_id] == "null"
-        # Create new route for tracking
         hike_route = @current_user.hike_routes.create!(
           title: "Nova ruta #{Time.current.strftime('%d.%m.%Y %H:%M')}",
           description: "Automatski kreirana ruta tokom praćenja",
@@ -167,17 +185,14 @@ class HikeRoutesController < ApiController
         )
         Rails.logger.info "Created new route with ID: #{hike_route.id}"
       else
-        # Use existing route
         hike_route = HikeRoute.find(params[:route_id])
-        
-        # Check if user owns the route
+
         if hike_route.user_id != @current_user.id
           render json: { status: 403, message: "You cannot edit route from another user" }
           return
         end
       end
 
-      # Create tracking point
       point = hike_route.points.build(
         lat: params[:latitude],
         lng: params[:longitude],
@@ -190,7 +205,6 @@ class HikeRoutesController < ApiController
         Rails.cache.delete("hike:#{hike_route.id}")
         Rails.logger.info "Cache invalidated for route #{hike_route.id}"
         
-        # Auto-update route distance and duration if we have enough points
         if hike_route.points.count >= 2
           hike_route.update_columns(
             distance: hike_route.calculated_distance,
@@ -201,14 +215,13 @@ class HikeRoutesController < ApiController
         render json: { 
           status: 200, 
           message: "Point saved successfully",
-          route_id: hike_route.id,  # Return route_id for frontend
+          route_id: hike_route.id, 
           point: {
             id: point.id,
             lat: point.lat,
             lng: point.lng,
             timestamp: point.timestamp
           },
-          # Return updated route stats
           route_stats: {
             distance: hike_route.display_distance,
             duration: hike_route.display_duration,
@@ -235,7 +248,7 @@ class HikeRoutesController < ApiController
   private
 
   def hike_params
-    params.require(:hike_route).permit(:title, :description, :duration, :difficulty, :distance, :location_latitude, :location_longitude, :best_time_to_visit, images: [], existing_images: [])
+    params.require(:hike_route).permit(:title, :description, :duration, :difficulty, :distance, :location_latitude, :location_longitude, :best_time_to_visit, :delete_all_images, images: [], existing_images: [], existing_image_ids: [])
   end
 
   def presigned_url(image)
