@@ -35,7 +35,7 @@ class HikeRoutesController < ApiController
   def nearby
     lat = params[:lat].to_f
     lng = params[:lng].to_f
-    radius = params[:radius].to_f || 10.0
+    radius = (params[:radius].to_f * 1000)
 
     Rails.logger.info "Nearby search: lat=#{lat}, lng=#{lng}, radius=#{radius}"
 
