@@ -32,6 +32,44 @@ class HikeRoutesController < ApiController
     render json: { data: user_routes, status: 200, message: "Success" }
   end
 
+  def nearby
+    lat = params[:lat].to_f
+    lng = params[:lng].to_f
+    radius = params[:radius].to_f || 10.0
+
+    Rails.logger.info "Nearby search: lat=#{lat}, lng=#{lng}, radius=#{radius}"
+
+    if lat == 0.0 || lng == 0.0
+      render json: { status: 400, message: "Invalid coordinates" }
+      return
+    end
+
+    @points = Point
+      .where(
+        "earth_box(ll_to_earth(?, ?), ?) @> ll_to_earth(lat, lng)
+        AND earth_distance(ll_to_earth(?, ?), ll_to_earth(lat, lng)) < ?",
+        lat, lng, radius, lat, lng, radius
+      )
+      .select(
+        "points.*, ROUND(earth_distance(ll_to_earth(#{lat}, #{lng}), ll_to_earth(lat, lng))) AS distance"
+      )
+      #.order("distance ASC")
+
+      nearby_routes = HikeRoute.where(id: @points.pluck(:hike_route_id))
+      .includes(:points)
+      .map do |route|
+        route.as_json.merge(
+          distance: route.display_distance,
+          duration: route.display_duration,
+          calculated_from_points: route.points.count >= 2,
+          points_count: route.points.count
+        )
+      end
+    
+
+    render json: { data: nearby_routes, status: 200, message: "Success" }
+  end
+
   def create
     @hike_route = @current_user.hike_routes.build(hike_params.except(:images))
   
@@ -58,16 +96,13 @@ class HikeRoutesController < ApiController
 
         {
           data: hike.as_json.merge(
-            # Override distance and duration with calculated values
             distance: hike.display_distance,
             duration: hike.display_duration,
-            # Add metadata about calculation
             calculated_from_points: hike.points.count >= 2,
             points_count: hike.points.count,
             image_urls: hike.images.attached? ? hike.images.map { |img|
-              presigned_url(img)  # tvoj metod za AWS R2
+              presigned_url(img)
             } : [],
-            # Add image IDs for deletion tracking
             image_ids: hike.images.attached? ? hike.images.map(&:id) : [],
             points: hike.points.order(:timestamp).map do |p|
               { lat: p.lat, lng: p.lng, timestamp: p.timestamp }
@@ -92,30 +127,14 @@ class HikeRoutesController < ApiController
       return
     end
 
-    # Handle image deletion
-    Rails.logger.info "Delete all images param: #{params[:hike_route][:delete_all_images]}"
-    Rails.logger.info "Existing image IDs param: #{params[:hike_route][:existing_image_ids].inspect}"
-    
     if params[:hike_route][:delete_all_images] == 'true'
-      # Delete all existing images
       Rails.logger.info "Deleting all images - delete_all_images flag set"
       hike_route.images.purge_later if hike_route.images.attached?
     elsif params[:hike_route][:existing_image_ids].present?
-      # Keep only the specified images, delete the rest
       existing_image_ids = params[:hike_route][:existing_image_ids].map(&:to_i)
-      
-      # Get current image IDs
       current_image_ids = hike_route.images.attached? ? hike_route.images.map(&:id) : []
-      
-      Rails.logger.info "Current image IDs: #{current_image_ids}"
-      Rails.logger.info "Existing image IDs to keep: #{existing_image_ids}"
-      
-      # Find images to delete (current images that are not in the existing list)
       image_ids_to_delete = current_image_ids - existing_image_ids
-      
-      Rails.logger.info "Image IDs to delete: #{image_ids_to_delete}"
-      
-      # Delete images that are not in the existing list
+
       if image_ids_to_delete.any?
         hike_route.images.each do |image|
           if image_ids_to_delete.include?(image.id)
