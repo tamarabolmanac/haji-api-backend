@@ -44,18 +44,9 @@ class HikeRoutesController < ApiController
       return
     end
 
-    @points = Point
-      .where(
-        "earth_box(ll_to_earth(?, ?), ?) @> ll_to_earth(lat, lng)
-        AND earth_distance(ll_to_earth(?, ?), ll_to_earth(lat, lng)) < ?",
-        lat, lng, radius, lat, lng, radius
-      )
-      .select(
-        "points.*, ROUND(earth_distance(ll_to_earth(#{lat}, #{lng}), ll_to_earth(lat, lng))) AS distance"
-      )
-      #.order("distance ASC")
+    @points = Point.near(lat, lng, radius)
 
-      nearby_routes = HikeRoute.where(id: @points.pluck(:hike_route_id))
+    nearby_routes = HikeRoute.where(id: @points.pluck(:hike_route_id))
       .includes(:points)
       .map do |route|
         route.as_json.merge(
