@@ -8,7 +8,7 @@ module Utils
     def encode(user)
       payload = {
         user_id: user.id,
-        exp: Time.now.to_i + 3600
+        exp: Time.now.to_i + (2 * 24 * 3600) # 2 days = 2 * 24 * 3600 seconds
       }
       JWT.encode(payload, @secret_key, 'HS256')
     end
