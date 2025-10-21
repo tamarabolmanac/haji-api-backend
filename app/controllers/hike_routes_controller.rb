@@ -47,20 +47,19 @@ class HikeRoutesController < ApiController
 
     @points = Point.near(lat, lng, radius)
 
-    nearby_routes = HikeRoute.where(id: @points.pluck(:hike_route_id))
-      .includes(:points)
+    nearby_routes = HikeRoute
+      .where(id: @points.select(:hike_route_id))
+      .left_joins(:points)
+      .select('hike_routes.*, COUNT(points.id) AS points_count')
+      .group('hike_routes.id')
       .map do |route|
-        # Find closest point distance for this route
-        route_points = @points.where(hike_route_id: route.id)
-
         route.as_json.merge(
           distance: route.distance,
           duration: route.duration,
-          calculated_from_points: route.points.count >= 2,
-          points_count: route.points.count
+          calculated_from_points: route.points_count >= 2,
+          points_count: route.points_count
         )
       end
-    
 
     render json: { data: nearby_routes, status: 200, message: "Success" }
   end
@@ -207,11 +206,29 @@ class HikeRoutesController < ApiController
         end
       end
 
+      # Parse timestamp properly with timezone
+      parsed_timestamp = if params[:timestamp].present?
+        begin
+          # Check if it's a Unix timestamp (number)
+          if params[:timestamp].to_s.match?(/^\d+$/)
+            Time.zone.at(params[:timestamp].to_i)
+          else
+            # Try to parse as ISO string
+            Time.zone.parse(params[:timestamp])
+          end
+        rescue ArgumentError => e
+          Rails.logger.warn "Invalid timestamp format: #{params[:timestamp]}, error: #{e.message}, using current time"
+          Time.current
+        end
+      else
+        Time.current
+      end
+
       point = hike_route.points.build(
         lat: params[:latitude],
         lng: params[:longitude],
         # accuracy: params[:accuracy],  # TODO: Add after migration
-        timestamp: params[:timestamp] || Time.current
+        timestamp: parsed_timestamp
         # user: @current_user  # TODO: Add after migration (currently nil)
       )
 
