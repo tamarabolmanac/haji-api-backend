@@ -5,14 +5,18 @@ class HikeRoutesController < ApiController
   before_action :authenticate_user, except: [:index, :show, :nearby]
   
   def index
-    hike_routes = HikeRoute.includes(:points).all.map do |route|
-      route.as_json.merge(
-        distance: route.distance,
-        duration: route.duration,
-        calculated_from_points: route.points.count >= 2,
-        points_count: route.points.count
-      )
-    end
+    hike_routes = HikeRoute
+      .left_joins(:points)
+      .select('hike_routes.*, COUNT(points.id) AS points_count')
+      .group('hike_routes.id')
+      .map do |route|
+        route.as_json.merge(
+          distance: route.distance,
+          duration: route.duration,
+          calculated_from_points: route.points_count >= 2,
+          points_count: route.points_count
+        )
+      end
     render json: { data: hike_routes, status: 200, message: "Success" }
   end
 
