@@ -22,6 +22,7 @@ Rails.application.routes.draw do
   
   # Route tracking
   post "/routes/track_point", to: "hike_routes#track_point"
+  post "/routes/:id/finalize", to: "hike_routes#finalize"
   
 
   get "/users/confirm/:token", to: "users#confirm"

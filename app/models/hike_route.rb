@@ -35,14 +35,51 @@ class HikeRoute < ApplicationRecord
     (duration_seconds / 60).round
   end
   
-  # Get the appropriate distance (calculated or stored)
+  # Get the appropriate distance (stored or calculated as fallback)
   def display_distance
-    points.count >= 2 ? calculated_distance : distance
+    # If we have stored distance and at least 2 points, use stored value
+    if distance.present? && points.count >= 2
+      distance
+    elsif points.count >= 2
+      # Fallback to calculation if stored value is missing
+      calculated_distance
+    else
+      # Use manually entered distance for routes with < 2 points
+      distance || 0
+    end
   end
   
-  # Get the appropriate duration (calculated or stored)
+  # Get the appropriate duration (stored or calculated as fallback)
   def display_duration
-    points.count >= 2 ? calculated_duration : duration
+    # If we have stored duration and at least 2 points, use stored value
+    if duration.present? && points.count >= 2
+      duration
+    elsif points.count >= 2
+      # Fallback to calculation if stored value is missing
+      calculated_duration
+    else
+      # Use manually entered duration for routes with < 2 points
+      duration || 0
+    end
+  end
+  
+  # Finalize route calculations when tracking is stopped
+  def finalize_route!
+    if points.count >= 2
+      calculated_distance = self.calculated_distance
+      calculated_duration = self.calculated_duration
+      
+      update_columns(
+        distance: calculated_distance,
+        duration: calculated_duration
+      )
+      
+      Rails.logger.info "Finalized route #{id}: distance=#{calculated_distance}km, duration=#{calculated_duration}min"
+      true
+    else
+      Rails.logger.info "Cannot finalize route #{id}: only #{points.count} points"
+      false
+    end
   end
   
   private

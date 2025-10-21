@@ -2,14 +2,13 @@
 require "aws-sdk-s3"
 
 class HikeRoutesController < ApiController
-  include Rails.application.routes.url_helpers
-  before_action :authenticate_user, except: [:index, :show]
+  before_action :authenticate_user, except: [:index, :show, :nearby]
   
   def index
     hike_routes = HikeRoute.includes(:points).all.map do |route|
       route.as_json.merge(
-        distance: route.display_distance,
-        duration: route.display_duration,
+        distance: route.distance,
+        duration: route.duration,
         calculated_from_points: route.points.count >= 2,
         points_count: route.points.count
       )
@@ -21,14 +20,12 @@ class HikeRoutesController < ApiController
     Rails.logger.info "Current user: #{@current_user.inspect}"
     user_routes = @current_user.hike_routes.includes(:points).map do |route|
       route.as_json.merge(
-        distance: route.display_distance,
-        duration: route.display_duration,
+        distance: route.distance,
+        duration: route.duration,
         calculated_from_points: route.points.count >= 2,
         points_count: route.points.count
       )
     end
-    Rails.logger.info "User routes count: #{user_routes.count}"
-
     render json: { data: user_routes, status: 200, message: "Success" }
   end
 
@@ -49,9 +46,12 @@ class HikeRoutesController < ApiController
     nearby_routes = HikeRoute.where(id: @points.pluck(:hike_route_id))
       .includes(:points)
       .map do |route|
+        # Find closest point distance for this route
+        route_points = @points.where(hike_route_id: route.id)
+
         route.as_json.merge(
-          distance: route.display_distance,
-          duration: route.display_duration,
+          distance: route.distance,
+          duration: route.duration,
           calculated_from_points: route.points.count >= 2,
           points_count: route.points.count
         )
@@ -233,8 +233,8 @@ class HikeRoutesController < ApiController
             timestamp: point.timestamp
           },
           route_stats: {
-            distance: hike_route.display_distance,
-            duration: hike_route.display_duration,
+            distance: hike_route.distance,
+            duration: hike_route.duration,
             points_count: hike_route.points.count,
             calculated_from_points: hike_route.points.count >= 2
           }
@@ -254,13 +254,39 @@ class HikeRoutesController < ApiController
     end
   end
   
+  # Finalize route calculations when tracking is stopped
+  def finalize
+    route = @current_user.hike_routes.find_by(id: params[:id])
+    
+    if route.nil?
+      render json: { status: 404, message: "Route not found or you don't have permission to finalize it" }
+      return
+    end
 
+    if route.finalize_route!
+      render json: { 
+        status: 200, 
+        message: "Route finalized successfully",
+        data: {
+          id: route.id,
+          distance: route.distance,
+          duration: route.duration,
+          points_count: route.points.count
+        }
+      }
+    else
+      render json: { 
+        status: 400, 
+        message: "Cannot finalize route: need at least 2 GPS points" 
+      }
+    end
+  end
+  
   private
 
   def hike_params
     params.require(:hike_route).permit(:title, :description, :duration, :difficulty, :distance, :location_latitude, :location_longitude, :best_time_to_visit, :delete_all_images, images: [], existing_images: [], existing_image_ids: [])
   end
-
   def presigned_url(image)
     s3 = Aws::S3::Resource.new(
       access_key_id: ENV['R2_ACCESS_KEY'],
