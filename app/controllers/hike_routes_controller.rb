@@ -21,6 +21,7 @@ class HikeRoutesController < ApiController
   end
 
   def my_routes
+    Rails.logger.info "Current user: #{@current_user.inspect}"
     user_routes = @current_user.hike_routes.includes(:points).map do |route|
       route.as_json.merge(
         distance: route.distance,
@@ -36,6 +37,8 @@ class HikeRoutesController < ApiController
     lat = params[:lat].to_f
     lng = params[:lng].to_f
     radius = (params[:radius].to_f * 1000)
+
+    Rails.logger.info "Nearby search: lat=#{lat}, lng=#{lng}, radius=#{radius}"
 
     if lat == 0.0 || lng == 0.0
       render json: { status: 400, message: "Invalid coordinates" }
@@ -120,6 +123,7 @@ class HikeRoutesController < ApiController
     end
 
     if params[:hike_route][:delete_all_images] == 'true'
+      Rails.logger.info "Deleting all images - delete_all_images flag set"
       hike_route.images.purge_later if hike_route.images.attached?
     elsif params[:hike_route][:existing_image_ids].present?
       existing_image_ids = params[:hike_route][:existing_image_ids].map(&:to_i)
@@ -129,6 +133,7 @@ class HikeRoutesController < ApiController
       if image_ids_to_delete.any?
         hike_route.images.each do |image|
           if image_ids_to_delete.include?(image.id)
+            Rails.logger.info "Deleting image with ID: #{image.id}"
             image.purge
           end
         end
@@ -184,7 +189,17 @@ class HikeRoutesController < ApiController
 
   def track_point
     begin
+      Rails.logger.info "=== TRACK_POINT DEBUG START ==="
+      Rails.logger.info "User ID: #{@current_user.id}"
+      Rails.logger.info "Received params: #{params.to_unsafe_h}"
+      Rails.logger.info "Route ID param: #{params[:route_id]} (type: #{params[:route_id].class})"
+      Rails.logger.info "Latitude: #{params[:latitude]}"
+      Rails.logger.info "Longitude: #{params[:longitude]}"
+      Rails.logger.info "Timestamp: #{params[:timestamp]}"
+      Rails.logger.info "Request time: #{Time.current}"
+      
       if params[:route_id].nil? || params[:route_id] == "null"
+        Rails.logger.info "Creating NEW route (route_id is nil or null)"
         hike_route = @current_user.hike_routes.create!(
           title: "Nova ruta #{Time.current.strftime('%d.%m.%Y %H:%M')}",
           description: "Automatski kreirana ruta tokom praćenja",
@@ -192,8 +207,11 @@ class HikeRoutesController < ApiController
           duration: 0,
           distance: 0
         )
+        Rails.logger.info "✅ Created new route with ID: #{hike_route.id}"
       else
+        Rails.logger.info "Using EXISTING route ID: #{params[:route_id]}"
         hike_route = HikeRoute.find(params[:route_id])
+        Rails.logger.info "✅ Found existing route: #{hike_route.id}, title: #{hike_route.title}"
 
         if hike_route.user_id != @current_user.id
           Rails.logger.error "❌ User #{@current_user.id} trying to edit route #{hike_route.id} owned by #{hike_route.user_id}"
@@ -220,6 +238,9 @@ class HikeRoutesController < ApiController
         Time.current
       end
 
+      Rails.logger.info "Building point for route #{hike_route.id}"
+      Rails.logger.info "Point data: lat=#{params[:latitude]}, lng=#{params[:longitude]}, timestamp=#{parsed_timestamp}"
+      
       point = hike_route.points.build(
         lat: params[:latitude],
         lng: params[:longitude],
@@ -229,18 +250,28 @@ class HikeRoutesController < ApiController
       )
 
       if point.save
+        Rails.logger.info "✅ Point saved successfully with ID: #{point.id}"
+        Rails.logger.info "Route #{hike_route.id} now has #{hike_route.points.count} points"
+        
         Rails.cache.delete("hike:#{hike_route.id}")
+        Rails.logger.info "Cache invalidated for route #{hike_route.id}"
         
         if hike_route.points.count >= 2
           old_distance = hike_route.distance
+          old_duration = hike_route.duration
           new_distance = hike_route.calculated_distance
           new_duration = hike_route.calculated_duration
+          
+          Rails.logger.info "Updating route calculations: distance #{old_distance} → #{new_distance}, duration #{old_duration} → #{new_duration}"
           
           hike_route.update_columns(
             distance: new_distance,
             duration: new_duration
           )
         end
+        
+        Rails.logger.info "✅ Sending successful response for route #{hike_route.id}, point #{point.id}"
+        Rails.logger.info "=== TRACK_POINT DEBUG END (SUCCESS) ==="
         
         render json: { 
           status: 200, 
@@ -261,6 +292,7 @@ class HikeRoutesController < ApiController
         }
       else
         Rails.logger.error "❌ Failed to save point: #{point.errors.full_messages}"
+        Rails.logger.info "=== TRACK_POINT DEBUG END (FAILED) ==="
         
         render json: { 
           status: 422, 
@@ -270,10 +302,12 @@ class HikeRoutesController < ApiController
       end
     rescue ActiveRecord::RecordNotFound => e
       Rails.logger.error "❌ Route not found: #{e.message}"
+      Rails.logger.info "=== TRACK_POINT DEBUG END (NOT FOUND) ==="
       render json: { status: 404, message: "Route not found" }
     rescue => e
       Rails.logger.error "❌ Error in track_point: #{e.message}"
       Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join('\n')}"
+      Rails.logger.info "=== TRACK_POINT DEBUG END (ERROR) ==="
       render json: { status: 500, message: "Internal server error" }
     end
   end
