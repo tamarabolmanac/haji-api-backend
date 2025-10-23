@@ -28,7 +28,6 @@ class Point < ApplicationRecord
   
   def invalidate_route_cache
     Rails.cache.delete("hike:#{hike_route_id}")
-    Rails.logger.info "Cache invalidated for route #{hike_route_id} due to point change"
   end
   
   def update_route_calculations
@@ -45,10 +44,6 @@ class Point < ApplicationRecord
         distance: calculated_distance,
         duration: calculated_duration
       )
-      
-      Rails.logger.info "Updated route #{route.id}: distance=#{calculated_distance}km, duration=#{calculated_duration}min"
-    else
-      Rails.logger.info "Route #{route.id} has less than 2 points, skipping calculation update"
     end
   end
 end

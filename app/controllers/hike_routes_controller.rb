@@ -21,7 +21,6 @@ class HikeRoutesController < ApiController
   end
 
   def my_routes
-    Rails.logger.info "Current user: #{@current_user.inspect}"
     user_routes = @current_user.hike_routes.includes(:points).map do |route|
       route.as_json.merge(
         distance: route.distance,
@@ -38,17 +37,16 @@ class HikeRoutesController < ApiController
     lng = params[:lng].to_f
     radius = (params[:radius].to_f * 1000)
 
-    Rails.logger.info "Nearby search: lat=#{lat}, lng=#{lng}, radius=#{radius}"
-
     if lat == 0.0 || lng == 0.0
       render json: { status: 400, message: "Invalid coordinates" }
       return
     end
 
     @points = Point.near(lat, lng, radius)
+    route_ids = @points.pluck(:hike_route_id).uniq
 
     nearby_routes = HikeRoute
-      .where(id: @points.select(:hike_route_id))
+      .where(id: route_ids)
       .left_joins(:points)
       .select('hike_routes.*, COUNT(points.id) AS points_count')
       .group('hike_routes.id')
@@ -122,7 +120,6 @@ class HikeRoutesController < ApiController
     end
 
     if params[:hike_route][:delete_all_images] == 'true'
-      Rails.logger.info "Deleting all images - delete_all_images flag set"
       hike_route.images.purge_later if hike_route.images.attached?
     elsif params[:hike_route][:existing_image_ids].present?
       existing_image_ids = params[:hike_route][:existing_image_ids].map(&:to_i)
@@ -132,7 +129,6 @@ class HikeRoutesController < ApiController
       if image_ids_to_delete.any?
         hike_route.images.each do |image|
           if image_ids_to_delete.include?(image.id)
-            Rails.logger.info "Deleting image with ID: #{image.id}"
             image.purge
           end
         end
@@ -196,11 +192,11 @@ class HikeRoutesController < ApiController
           duration: 0,
           distance: 0
         )
-        Rails.logger.info "Created new route with ID: #{hike_route.id}"
       else
         hike_route = HikeRoute.find(params[:route_id])
 
         if hike_route.user_id != @current_user.id
+          Rails.logger.error "❌ User #{@current_user.id} trying to edit route #{hike_route.id} owned by #{hike_route.user_id}"
           render json: { status: 403, message: "You cannot edit route from another user" }
           return
         end
@@ -234,12 +230,15 @@ class HikeRoutesController < ApiController
 
       if point.save
         Rails.cache.delete("hike:#{hike_route.id}")
-        Rails.logger.info "Cache invalidated for route #{hike_route.id}"
         
         if hike_route.points.count >= 2
+          old_distance = hike_route.distance
+          new_distance = hike_route.calculated_distance
+          new_duration = hike_route.calculated_duration
+          
           hike_route.update_columns(
-            distance: hike_route.calculated_distance,
-            duration: hike_route.calculated_duration
+            distance: new_distance,
+            duration: new_duration
           )
         end
         
@@ -261,16 +260,20 @@ class HikeRoutesController < ApiController
           }
         }
       else
+        Rails.logger.error "❌ Failed to save point: #{point.errors.full_messages}"
+        
         render json: { 
           status: 422, 
           message: "Failed to save point",
           errors: point.errors.full_messages
         }
       end
-    rescue ActiveRecord::RecordNotFound
+    rescue ActiveRecord::RecordNotFound => e
+      Rails.logger.error "❌ Route not found: #{e.message}"
       render json: { status: 404, message: "Route not found" }
     rescue => e
-      Rails.logger.error "Error in track_point: #{e.message}"
+      Rails.logger.error "❌ Error in track_point: #{e.message}"
+      Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join('\n')}"
       render json: { status: 500, message: "Internal server error" }
     end
   end

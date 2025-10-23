@@ -74,10 +74,8 @@ class HikeRoute < ApplicationRecord
         duration: calculated_duration
       )
       
-      Rails.logger.info "Finalized route #{id}: distance=#{calculated_distance}km, duration=#{calculated_duration}min"
       true
     else
-      Rails.logger.info "Cannot finalize route #{id}: only #{points.count} points"
       false
     end
   end
@@ -86,7 +84,6 @@ class HikeRoute < ApplicationRecord
   
   def invalidate_cache
     Rails.cache.delete("hike:#{id}")
-    Rails.logger.info "Cache invalidated for route #{id} due to route update"
   end
   
   # Haversine formula to calculate distance between two points
