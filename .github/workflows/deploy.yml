@@ -1,0 +1,40 @@
+name: Deploy Backend to VPS
+
+on:
+  push:
+    branches:
+      - main  # ili master, ako ti je to glavni branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout koda
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Login na GitHub Container Registry
+      - name: Log in to GHCR
+        run: echo ${{ secrets.GHCR_PAT }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      # 3️⃣ Build & push Docker image
+      - name: Build and Push Docker image
+        run: |
+          IMAGE_NAME=ghcr.io/tamarabolmanac/haji-api-backend:latest
+          docker build -t $IMAGE_NAME ./haji-api-backend
+          docker push $IMAGE_NAME
+
+      # 4️⃣ Deploy na tvoj server
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/${{ secrets.SSH_USER }}/hajki
+            docker login ghcr.io -u tamarabolmanac -p ${{ secrets.GHCR_PAT }}
+            docker-compose pull backend
+            docker-compose up -d backend
+            docker image prune -f
