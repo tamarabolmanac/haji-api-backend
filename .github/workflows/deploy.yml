@@ -22,7 +22,7 @@ jobs:
       - name: Build and Push Docker image
         run: |
           IMAGE_NAME=ghcr.io/tamarabolmanac/haji-api-backend:latest
-          docker build -t $IMAGE_NAME ./haji-api-backend
+          docker build -t $IMAGE_NAME
           docker push $IMAGE_NAME
 
       # 4️⃣ Deploy na tvoj server
