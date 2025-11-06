@@ -21,7 +21,6 @@ class HikeRoutesController < ApiController
   end
 
   def my_routes
-    Rails.logger.info "Current user: #{@current_user.inspect}"
     user_routes = @current_user.hike_routes.includes(:points).map do |route|
       route.as_json.merge(
         distance: route.distance,
@@ -200,14 +199,19 @@ class HikeRoutesController < ApiController
       
       if params[:route_id].nil? || params[:route_id] == "null"
         Rails.logger.info "Creating NEW route (route_id is nil or null)"
+        
+        # Use timestamp from browser (user's local time)
+        user_time = params[:timestamp].present? ? Time.parse(params[:timestamp]) : Time.current
+        formatted_time = user_time.strftime('%d.%m.%Y %H:%M')
+        
         hike_route = @current_user.hike_routes.create!(
-          title: "Nova ruta #{Time.current.strftime('%d.%m.%Y %H:%M')}",
+          title: "Nova ruta #{formatted_time}",
           description: "Automatski kreirana ruta tokom praćenja",
           difficulty: "medium",
           duration: 0,
           distance: 0
         )
-        Rails.logger.info "✅ Created new route with ID: #{hike_route.id}"
+        Rails.logger.info "✅ Created new route with ID: #{hike_route.id}, time: #{formatted_time}"
       else
         Rails.logger.info "Using EXISTING route ID: #{params[:route_id]}"
         hike_route = HikeRoute.find(params[:route_id])

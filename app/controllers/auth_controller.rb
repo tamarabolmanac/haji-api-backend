@@ -22,7 +22,6 @@ class AuthController < ActionController::API
     )
     
     if user.save
-      Rails.logger.info "User created successfully: #{user.email}"
       user.send_confirmation_email!
 
       token = generate_token(user)
@@ -66,9 +65,7 @@ class AuthController < ActionController::API
           message: "User not confirmed"
         }
       else
-        Rails.logger.info "Authentication successful"
         token = JwtAuthenticator.new.encode(user)
-        Rails.logger.info "Generated token: #{token}"
         render json: { 
           status: 200, 
           message: "User logged in successfully",

@@ -8,21 +8,24 @@ class ApiController < ActionController::API
   end
 
   def authenticate_token
-    token = request.headers['Authorization']&.split(' ')&.last
-    Rails.logger.info "Auth token: #{token}"
+    auth_header = request.headers['Authorization']
+    
+    token = auth_header&.split(' ')&.last
+    
     if token
       begin
         decoded_token = Utils::JwtAuthenticator.new.decode(token)
-        Rails.logger.info "Decoded token: #{decoded_token}"
-        @current_user = User.find(decoded_token[0]['user_id'])
-        Rails.logger.info "Found user: #{@current_user.inspect}"
+        user_id = decoded_token[0]['user_id']
+        @current_user = User.find(user_id)
       rescue JWT::DecodeError, JWT::ExpiredSignature => e
         # Token is invalid or expired, log out the user
         Rails.logger.error "Token decode error: #{e.message}"
+        Rails.logger.error "Token that failed: #{token}"
+        @current_user = nil
+      rescue ActiveRecord::RecordNotFound => e
+        Rails.logger.error "User not found: #{e.message}"
         @current_user = nil
       end
-    else
-      Rails.logger.info "No token provided"
     end
   end
 

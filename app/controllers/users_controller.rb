@@ -25,4 +25,10 @@ class UsersController < ApiController
       render json: { message: "Invalid token." }, status: :unprocessable_entity
     end
   end
+
+  def online
+    ids = OnlineTracker.list
+    users = User.where(id: ids).select(:id, :name)
+    render json: users
+  end
 end

@@ -32,4 +32,9 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+
+  get "/online_users", to: "users#online"
+
+  # ActionCable
+  mount ActionCable.server => '/cable'
 end
