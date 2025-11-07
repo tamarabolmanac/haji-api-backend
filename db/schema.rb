@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_21_150200) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_07_170230) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "cube"
   enable_extension "earthdistance"
@@ -42,6 +42,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_21_150200) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "game_rooms", force: :cascade do |t|
+    t.integer "player1_id"
+    t.integer "player2_id"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "hike_routes", force: :cascade do |t|
