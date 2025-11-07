@@ -1,223 +1,122 @@
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
+SEED_QUESTIONS = [
+  { question: "Koja je najveća životinja na planeti?", option_a: "Plavi kit", option_b: "Afrički slon", option_c: "Bela ajkula", option_d: "Orka", correct_option: "A" },
+  { question: "Koji gas biljke koriste u procesu fotosinteze?", option_a: "Kiseonik", option_b: "Ugljen-dioksid", option_c: "Azot", option_d: "Vodonik", correct_option: "B" },
+  { question: "Koja reka se uliva u Dunav u Beogradu?", option_a: "Sava", option_b: "Tisa", option_c: "Drina", option_d: "Lim", correct_option: "A" },
+  { question: "Koji nacionalni park obuhvata Đerdapsku klisuru?", option_a: "Đerdap", option_b: "Tara", option_c: "Kopaonik", option_d: "Fruška gora", correct_option: "A" },
+  { question: "Koji je najviši vrh Stare planine?", option_a: "Midžor", option_b: "Tornik", option_c: "Pančićev vrh", option_d: "Rudnik", correct_option: "A" },
+  { question: "Koje jezero je poznato po plutajućim tresetnim ostrvima?", option_a: "Vlasinsko jezero", option_b: "Palićko jezero", option_c: "Perućac", option_d: "Gružansko jezero", correct_option: "A" },
+  { question: "Specijalni rezervat poznat po meandrima i beloglavom supu?", option_a: "Uvac", option_b: "Zasavica", option_c: "Obedska bara", option_d: "Carska bara", correct_option: "A" },
+  { question: "Koja reka čini granicu između Srbije i Bosne i Hercegovine na većem delu toka?", option_a: "Drina", option_b: "Timok", option_c: "Tamiš", option_d: "Kolubara", correct_option: "A" },
+  { question: "Koji je najveći grad u Vojvodini?", option_a: "Novi Sad", option_b: "Subotica", option_c: "Zrenjanin", option_d: "Pančevo", correct_option: "A" },
+  { question: "Koja planina nosi naziv 'Srebrna planina'?", option_a: "Kopaonik", option_b: "Tara", option_c: "Stara planina", option_d: "Zlatibor", correct_option: "A" },
+  { question: "Najviši vrh Kopaonika je?", option_a: "Pančićev vrh", option_b: "Midžor", option_c: "Tornik", option_d: "Rtanj (Šiljak)", correct_option: "A" },
+  { question: "Najviši vrh Zlatibora je?", option_a: "Tornik", option_b: "Midžor", option_c: "Avala", option_d: "Besna Kobila", correct_option: "A" },
+  { question: "Na kojoj planini se nalazi Babin zub?", option_a: "Stara planina", option_b: "Goč", option_c: "Tara", option_d: "Suva planina", correct_option: "A" },
+  { question: "Koje jezero se nalazi pored Subotice?", option_a: "Palićko jezero", option_b: "Vlasinsko jezero", option_c: "Srebrno jezero", option_d: "Jezero Perućac", correct_option: "A" },
+  { question: "Koja je najduža reka koja u potpunosti teče kroz Srbiju?", option_a: "Velika Morava", option_b: "Dunav", option_c: "Sava", option_d: "Drina", correct_option: "A" },
+  { question: "Velika Morava nastaje spajanjem:", option_a: "Zapadne i Južne Morave", option_b: "Save i Drine", option_c: "Tise i Tamiša", option_d: "Dunava i Save", correct_option: "A" },
+  { question: "Koji rezervat prirode se nalazi u Sremu i poznat je po močvarama?", option_a: "Obedska bara", option_b: "Zasavica", option_c: "Carska bara", option_d: "Ludaško jezero", correct_option: "A" },
+  { question: "Koji nacionalni park se nalazi na Fruškoj gori?", option_a: "Fruška gora", option_b: "Kopaonik", option_c: "Tara", option_d: "Đerdap", correct_option: "A" },
+  { question: "Koja reka se uliva u Dunav kod Titela?", option_a: "Tisa", option_b: "Sava", option_c: "Morava", option_d: "Drina", correct_option: "A" },
+  { question: "Kako se zove klisura između planina Ovčar i Kablar?", option_a: "Ovčarsko‑kablarska klisura", option_b: "Sićevačka klisura", option_c: "Đerdapska klisura", option_d: "Jerma kanjon", correct_option: "A" },
+  { question: "Šta preovladava u reljefu Vojvodine?", option_a: "Ravnica", option_b: "Visoravni", option_c: "Visoke planine", option_d: "Peščane dine", correct_option: "A" },
+  { question: "Kako se zove peščara u Banatu poznata kao 'Evropska Sahara'?", option_a: "Deliblatska peščara", option_b: "Subotička peščara", option_c: "Moravička peščara", option_d: "Titelska peščara", correct_option: "A" },
+  { question: "Na kojoj planini raste endemska Pančićeva omorika?", option_a: "Tara", option_b: "Kopaonik", option_c: "Rtanj", option_d: "Zlatibor", correct_option: "A" },
+  { question: "U kom delu Srbije se nalazi planina Golija?", option_a: "Jugozapadna Srbija", option_b: "Severoistočna Srbija", option_c: "Severozapadna Srbija", option_d: "Jugoistočna Srbija", correct_option: "A" },
+  { question: "Kroz koji grad protiče reka Nišava?", option_a: "Niš", option_b: "Novi Sad", option_c: "Kragujevac", option_d: "Subotica", correct_option: "A" },
+  { question: "Vodopad Veliki Buk (Lisine) nalazi se kod:", option_a: "Despotovca", option_b: "Sokobanje", option_c: "Prijepolja", option_d: "Aranđelovca", correct_option: "A" },
+  { question: "Koja pećina se nalazi kod Despotovca i poznata je po bogatoj dekoraciji?", option_a: "Resavska pećina", option_b: "Stopića pećina", option_c: "Potpećka pećina", option_d: "Rajkova pećina", correct_option: "A" },
+  { question: "Koja pećina je poznata po bigrenim kadama na Zlatiboru?", option_a: "Stopića pećina", option_b: "Resavska pećina", option_c: "Rajkova pećina", option_d: "Ceremošnja", correct_option: "A" },
+  { question: "Najveće akumulaciono jezero na Dunavu u Srbiji je:", option_a: "Đerdapsko jezero", option_b: "Perućac", option_c: "Palićko jezero", option_d: "Vlasinsko jezero", correct_option: "A" },
+  { question: "Na kojoj planini u Srbiji živi populacija mrkog medveda?", option_a: "Tara", option_b: "Fruška gora", option_c: "Avala", option_d: "Vršačke planine", correct_option: "A" },
+  { question: "Najveće prirodno jezero u Vojvodini je:", option_a: "Palićko jezero", option_b: "Ludaško jezero", option_c: "Obedska bara", option_d: "Zasavica", correct_option: "A" },
+  { question: "Koja reka je formirala meandre kod Sjenice?", option_a: "Uvac", option_b: "Ibar", option_c: "Lim", option_d: "Drina", correct_option: "A" },
+  { question: "Koja planina pripada Dinarskim Alpima?", option_a: "Zlatibor", option_b: "Stara planina", option_c: "Vršačke planine", option_d: "Avala", correct_option: "A" },
+  { question: "Koja planina pripada Karpatsko‑balkanskom sistemu?", option_a: "Stara planina", option_b: "Kopaonik", option_c: "Tara", option_d: "Golija", correct_option: "A" },
+  { question: "Koja planina dominira jugoistočnom Srbijom i poznata je po krševitom reljefu?", option_a: "Suva planina", option_b: "Tara", option_c: "Goč", option_d: "Rudnik", correct_option: "A" },
+  { question: "Kod kog mesta se spajaju Zapadna i Južna Morava?", option_a: "Stalać", option_b: "Kraljevo", option_c: "Kruševac", option_d: "Niš", correct_option: "A" },
+  { question: "Na ušću koje dve reke leži Beograd?", option_a: "Save i Dunava", option_b: "Drine i Save", option_c: "Tise i Dunava", option_d: "Velike i Južne Morave", correct_option: "A" },
+  { question: "Kroz koji grad protiče Dunav u Srbiji?", option_a: "Novi Sad", option_b: "Kragujevac", option_c: "Užice", option_d: "Čačak", correct_option: "A" },
+  { question: "Poznati vidikovac 'Banjska stena' nalazi se na planini:", option_a: "Tara", option_b: "Zlatibor", option_c: "Kopaonik", option_d: "Rtanj", correct_option: "A" },
+  { question: "Specijalni rezervat prirode poznat po dabrovima i močvarama kod Sremske Mitrovice je:", option_a: "Zasavica", option_b: "Obedska bara", option_c: "Carska bara", option_d: "Ludaško jezero", correct_option: "A" },
+  { question: "Koja reka razdvaja Bačku i Banat u Vojvodini?", option_a: "Tisa", option_b: "Sava", option_c: "Tamiš", option_d: "Begej", correct_option: "A" },
+  { question: "Kroz koji grad protiče Zapadna Morava?", option_a: "Čačak", option_b: "Niš", option_c: "Subotica", option_d: "Zaječar", correct_option: "A" },
+  { question: "Glavni grad Šumadije je:", option_a: "Kragujevac", option_b: "Kraljevo", option_c: "Požega", option_d: "Jagodina", correct_option: "A" },
+  { question: "Sićevačka klisura se nalazi na reci:", option_a: "Nišavi", option_b: "Ibru", option_c: "Limu", option_d: "Tisi", correct_option: "A" },
+  { question: "Koja vrsta vegetacije je karakteristična za Deliblatsku peščaru?", option_a: "Stepska vegetacija", option_b: "Tropska džungla", option_c: "Tundra", option_d: "Taiga", correct_option: "A" },
+  { question: "Rajkova pećina se nalazi u blizini:", option_a: "Majdanpeka", option_b: "Subotice", option_c: "Užica", option_d: "Sombora", correct_option: "A" },
+  { question: "Kroz koju klisuru teče Južna Morava istočno od Niša?", option_a: "Sićevačku klisuru", option_b: "Đerdapsku", option_c: "Ovčarsko‑kablarsku", option_d: "Jerma klisuru", correct_option: "A" },
+  { question: "Kroz koji grad protiče reka Đetinja?", option_a: "Užice", option_b: "Kragujevac", option_c: "Niš", option_d: "Novi Sad", correct_option: "A" },
+  { question: "Koja planina je poznata po travnatim pašnjacima i borovim šumama i leži zapadno od Užica?", option_a: "Zlatibor", option_b: "Stara planina", option_c: "Rtanj", option_d: "Goč", correct_option: "A" },
+  { question: "Koje je močvarno područje i Ramsarsko područje u Bačkoj, uz Dunav?", option_a: "Gornje Podunavlje", option_b: "Carska bara", option_c: "Zasavica", option_d: "Obedska bara", correct_option: "A" },
+  { question: "Kroz koji grad protiče reka Kolubara?", option_a: "Valjevo", option_b: "Zrenjanin", option_c: "Leskovac", option_d: "Smederevo", correct_option: "A" },
+  { question: "Reka Rasina protiče kroz:", option_a: "Kruševac", option_b: "Kikindu", option_c: "Vranje", option_d: "Pirot", correct_option: "A" },
+  { question: "Koja reka se uliva u Dunav kod Pančeva?", option_a: "Tamiš", option_b: "Sava", option_c: "Ibar", option_d: "Nišava", correct_option: "A" },
+  { question: "Vrh Šiljak pripada planini:", option_a: "Rtanj", option_b: "Goč", option_c: "Rudnik", option_d: "Avala", correct_option: "A" },
+  { question: "Planina Miroč nalazi se u oblasti:", option_a: "Đerdapa", option_b: "Kopaonika", option_c: "Šar‑planine", option_d: "Golije", correct_option: "A" },
+  { question: "Koji rezervat prirode u Bačkom Podunavlju je deo UNESCO MAB?", option_a: "Bačko Podunavlje", option_b: "Golija‑Studenica", option_c: "Kopaonik", option_d: "Jastrebac", correct_option: "A" },
+  { question: "Nišava se uliva u:", option_a: "Južnu Moravu", option_b: "Zapadnu Moravu", option_c: "Drinu", option_d: "Tisu", correct_option: "A" },
+  { question: "Kroz koji grad protiče Južna Morava?", option_a: "Leskovac", option_b: "Zrenjanin", option_c: "Subotica", option_d: "Novi Sad", correct_option: "A" },
+  { question: "Na kojoj reci je akumulacija Perućac?", option_a: "Drini", option_b: "Savi", option_c: "Tisi", option_d: "Velikoj Moravi", correct_option: "A" },
+  { question: "Koje jezero nastalo pregrađivanjem reke Uvac kod Nove Varoši?", option_a: "Zlatarsko jezero", option_b: "Palićko jezero", option_c: "Vlasinsko jezero", option_d: "Đerdapsko jezero", correct_option: "A" },
+  { question: "Kroz koji grad protiče reka Ibar?", option_a: "Kraljevo", option_b: "Novi Sad", option_c: "Smederevo", option_d: "Niš", correct_option: "A" },
+  { question: "Na kojoj planini se nalazi ski‑centar Tornik?", option_a: "Zlatibor", option_b: "Kopaonik", option_c: "Stara planina", option_d: "Tara", correct_option: "A" },
+  { question: "Koji planinski masiv se nalazi oko Vrnjačke Banje?", option_a: "Goč", option_b: "Tara", option_c: "Zlatibor", option_d: "Avala", correct_option: "A" },
+  { question: "Koja banja leži na obali Drine?", option_a: "Banja Koviljača", option_b: "Vrnjačka Banja", option_c: "Sokobanja", option_d: "Niška Banja", correct_option: "A" },
+  { question: "Koji vodopad se nalazi na planini Ozren kod Sokobanje?", option_a: "Ripaljka", option_b: "Prskalo", option_c: "Veliki Buk", option_d: "Sopotnica", correct_option: "A" },
+  { question: "Vodopad Gostilje nalazi se na:", option_a: "Zlatiboru", option_b: "Tari", option_c: "Kopaoniku", option_d: "Rtnju", correct_option: "A" },
+  { question: "Kanjon reke Jerme se nalazi u:", option_a: "Jugoistočnoj Srbiji", option_b: "Vojvodini", option_c: "Šumadiji", option_d: "Mačvi", correct_option: "A" },
+  { question: "Lazarev kanjon se nalazi u blizini grada:", option_a: "Zaječara", option_b: "Požarevca", option_c: "Subotice", option_d: "Kragujevca", correct_option: "A" },
+  { question: "Koji grad leži na Dunavu kod Đerdapa?", option_a: "Kladovo", option_b: "Loznica", option_c: "Čačak", option_d: "Novi Pazar", correct_option: "A" },
+  { question: "Koja planina uz kanjon Drine ima staništa Pančićeve omorike?", option_a: "Tara", option_b: "Stara planina", option_c: "Rtanj", option_d: "Goč", correct_option: "A" },
+  { question: "Koje jezero u Vojvodini je specijalni rezervat zbog vodenih ptica?", option_a: "Ludaško jezero", option_b: "Palićko jezero", option_c: "Vlasinsko jezero", option_d: "Perućac", correct_option: "A" },
+  { question: "Koji grad leži na ušću Kolubare u Savu?", option_a: "Obrenovac", option_b: "Šabac", option_c: "Smederevo", option_d: "Zrenjanin", correct_option: "A" },
+  { question: "Mačva je poznata kao:", option_a: "Plodna ravnica", option_b: "Visoravan", option_c: "Planinski masiv", option_d: "Peščara", correct_option: "A" },
+  { question: "Koja planina se prostire između Ivanjice i Raške?", option_a: "Golija", option_b: "Fruška gora", option_c: "Avala", option_d: "Vršačke planine", correct_option: "A" },
+  { question: "Tisa se uliva u Dunav kod:", option_a: "Titela", option_b: "Pančeva", option_c: "Smedereva", option_d: "Kladova", correct_option: "A" },
+  { question: "Planina kod Kraljeva je:", option_a: "Stolovi", option_b: "Avala", option_c: "Vršačke planine", option_d: "Fruška gora", correct_option: "A" },
+  { question: "Reka Pčinja protiče kroz:", option_a: "Vranje", option_b: "Subotica", option_c: "Novi Sad", option_d: "Zrenjanin", correct_option: "A" },
+  { question: "Reka Timok formira granicu sa:", option_a: "Bugarskom", option_b: "Rumunijom", option_c: "Bosnom i Hercegovinom", option_d: "Hrvatskom", correct_option: "A" },
+  { question: "Koja reka se uliva u Dunav kod Smedereva?", option_a: "Velika Morava", option_b: "Kolubara", option_c: "Ibar", option_d: "Nišava", correct_option: "A" },
+  { question: "Koja planina se nalazi iznad Vrnjačke Banje i Kraljeva?", option_a: "Goč", option_b: "Rtanj", option_c: "Tara", option_d: "Fruška gora", correct_option: "A" },
+  { question: "Koja planina je poznata po piramidalnom obliku?", option_a: "Rtanj", option_b: "Avala", option_c: "Rudnik", option_d: "Besna Kobila", correct_option: "A" },
+  { question: "Specijalni rezervat 'Obedska bara' leži u:", option_a: "Sremu", option_b: "Banatu", option_c: "Bačkoj", option_d: "Šumadiji", correct_option: "A" },
+  { question: "Koja reka je glavni tok koji protiče kroz Zrenjanin?", option_a: "Begej", option_b: "Drina", option_c: "Ibar", option_d: "Kolubara", correct_option: "A" },
+  { question: "Koji grad se nalazi na obali Tamiša?", option_a: "Pančevo", option_b: "Šabac", option_c: "Novi Sad", option_d: "Niš", correct_option: "A" },
+  { question: "Vodopadi Sopotnice se nalaze kod:", option_a: "Prijepolja", option_b: "Jagodine", option_c: "Sombora", option_d: "Pirota", correct_option: "A" },
+  { question: "Koja banja se nalazi kraj planine Rtanj?", option_a: "Sokobanja", option_b: "Vrnjačka Banja", option_c: "Niška Banja", option_d: "Banja Koviljača", correct_option: "A" },
+  { question: "Koja reka se uliva u Drinu kod Loznice?", option_a: "Jadar", option_b: "Ibar", option_c: "Tamiš", option_d: "Tisa", correct_option: "A" },
+  { question: "Ski centar 'Stara planina' nalazi se na planini:", option_a: "Stara planina", option_b: "Kopaonik", option_c: "Zlatibor", option_d: "Goč", correct_option: "A" },
+  { question: "Najveće gradsko izletište u Beogradu na reci Savi je:", option_a: "Ada Ciganlija", option_b: "Veliko ratno ostrvo", option_c: "Ada Huja", option_d: "Zemun kej", correct_option: "A" },
+  { question: "Koje ostrvo se nalazi na ušću Save u Dunav i zaštićeno je kao prirodno dobro?", option_a: "Veliko ratno ostrvo", option_b: "Ada Ciganlija", option_c: "Ada Huja", option_d: "Ada Bojana", correct_option: "A" },
+  { question: "Većina reka Srbije se uliva u koje more preko Dunava?", option_a: "Crno more", option_b: "Egejsko more", option_c: "Jadransko more", option_d: "Baltičko more", correct_option: "A" },
+  { question: "Koji deo Srbije pripada Panonskoj niziji?", option_a: "Vojvodina", option_b: "Šumadija", option_c: "Pomoravlje", option_d: "Raška", correct_option: "A" },
+  { question: "Koja planina je najbliža Beogradu?", option_a: "Avala", option_b: "Rtanj", option_c: "Kopaonik", option_d: "Tara", correct_option: "A" },
+  { question: "Koje jezero na Drini je popularno kod Bajine Bašte?", option_a: "Perućac", option_b: "Đerdapsko", option_c: "Vlasinsko", option_d: "Palićko", correct_option: "A" },
+  { question: "Na kojoj planini se nalazi spomenik Neznanom junaku?", option_a: "Avala", option_b: "Fruška gora", option_c: "Kosmaj", option_d: "Cer", correct_option: "A" },
+  { question: "Koji masiv se nalazi iznad Niške Banje?", option_a: "Suva planina", option_b: "Goč", option_c: "Tara", option_d: "Rudnik", correct_option: "A" },
+  { question: "Koja planina dominira regionom Šumadije?", option_a: "Rudnik", option_b: "Goč", option_c: "Tara", option_d: "Avala", correct_option: "A" },
+  { question: "Đavolja Varoš se nalazi na planini:", option_a: "Radan", option_b: "Tara", option_c: "Fruška gora", option_d: "Goč", correct_option: "A" },
+  { question: "Zaštićena biljka 'Ramonda serbica' raste u klisurama:", option_a: "Jelašničkoj i Sićevačkoj", option_b: "Đerdapskoj i Ovčarsko‑kablarskoj", option_c: "Jerme i Drine", option_d: "Kolubare i Save", correct_option: "A" },
+  { question: "Koja reka teče kroz Novi Pazar?", option_a: "Raška", option_b: "Ibar", option_c: "Toplica", option_d: "Temnić", correct_option: "A" }
+]
 
-# Sample Hike Routes in Balkans
+SEED_QUESTIONS.each_with_index do |q, i|
+  options = [q[:option_a], q[:option_b], q[:option_c], q[:option_d]]
+  correct_text = q["option_#{q[:correct_option].downcase}".to_sym]
+  wrong = options.reject { |t| t == correct_text }
+  wrong.shuffle!
+  target_idx = i % 4
+  arranged = Array.new(4)
+  arranged[target_idx] = correct_text
+  ([0,1,2,3] - [target_idx]).each_with_index { |pos, j| arranged[pos] = wrong[j] }
 
-# Croatia
-HikeRoute.find_or_create_by!(
-  title: "Velebit Mountain - Paklenica",
-  description: "A challenging hike through Croatia's largest mountain range with stunning views of the Adriatic Sea",
-  duration: 6,
-  difficulty: "hard",
-  distance: 15.5,
-  location_latitude: 44.2561,
-  location_longitude: 15.3238,
-  best_time_to_visit: "May to September"
-)
-
-HikeRoute.find_or_create_by!(
-  title: "Plitvice Lakes National Park - Veliki Buk",
-  description: "A scenic hike through the famous lakes and waterfalls with wooden walkways",
-  duration: 4,
-  difficulty: "medium",
-  distance: 8.2,
-  location_latitude: 44.6425,
-  location_longitude: 15.6133,
-  best_time_to_visit: "April to October"
-)
-
-# Montenegro
-
-# Serbia
-HikeRoute.find_or_create_by!(
-  title: "Djerdap National Park - Iron Gates",
-  description: "A scenic hike through the Djerdap Gorge with stunning Danube river views and historical sites",
-  duration: 5,
-  difficulty: "medium",
-  distance: "12.5",
-  location_latitude: 44.7167,
-  location_longitude: 21.7000,
-  best_time_to_visit: "April to October"
-)
-
-HikeRoute.find_or_create_by!(
-  title: "Tara National Park",
-  description: "A beautiful hike through dense forests and mountain peaks with panoramic views",
-  duration: 6,
-  difficulty: "medium",
-  distance: "14.0",
-  location_latitude: 43.7833,
-  location_longitude: 19.2500,
-  best_time_to_visit: "May to September"
-)
-
-HikeRoute.find_or_create_by!(
-  title: "Strazilovo Mountain",
-  description: "A challenging hike with panoramic views of the surrounding mountains and valleys",
-  duration: 4,
-  difficulty: "hard",
-  distance: "10.5",
-  location_latitude: 44.4333,
-  location_longitude: 21.3000,
-  best_time_to_visit: "June to September"
-)
-
-HikeRoute.find_or_create_by!(
-  title: "Begečka Jama",
-  description: "An adventurous hike through one of Serbia's largest caves with unique geological formations",
-  duration: 3,
-  difficulty: "medium",
-  distance: "5.0",
-  location_latitude: 45.4833,
-  location_longitude: 19.7167,
-  best_time_to_visit: "March to October"
-)
-
-HikeRoute.find_or_create_by!(
-  title: "Zasavica Biosphere Reserve",
-  description: "A nature hike through wetlands and protected wildlife areas with rich biodiversity",
-  duration: 3,
-  difficulty: "easy",
-  distance: "6.5",
-  location_latitude: 44.9667,
-  location_longitude: 20.1333,
-  best_time_to_visit: "April to September"
-)
-
-HikeRoute.find_or_create_by!(
-  title: "Koviljski Rit",
-  description: "A scenic hike through the Danube river wetlands with bird watching opportunities",
-  duration: 4,
-  difficulty: "easy",
-  distance: "7.5",
-  location_latitude: 45.2500,
-  location_longitude: 19.8333,
-  best_time_to_visit: "March to October"
-)
-
-HikeRoute.find_or_create_by!(
-  title: "Fruška Gora National Park",
-  description: "A beautiful hike through Serbia's oldest national park with stunning views of the Danube and rich biodiversity",
-  duration: 5,
-  difficulty: "medium",
-  distance: "12.0",
-  location_latitude: 45.1667,
-  location_longitude: 19.7500,
-  best_time_to_visit: "April to October"
-)
-
-# Montenegro
-HikeRoute.find_or_create_by!(
-  title: "Durmitor National Park - Škrčka Lakes",
-  description: "A beautiful hike through the Durmitor mountain range with stunning alpine lakes",
-  duration: 5,
-  difficulty: "medium",
-  distance: 10.5,
-  location_latitude: 43.3333,
-  location_longitude: 18.8333,
-  best_time_to_visit: "May to September"
-)
-
-HikeRoute.find_or_create_by!(
-  title: "Biogradska Gora - Biograd Lake",
-  description: "A hike through one of Europe's last primeval forests with a beautiful alpine lake",
-  duration: 3,
-  difficulty: "easy",
-  distance: 6.5,
-  location_latitude: 43.2333,
-  location_longitude: 19.0833,
-  best_time_to_visit: "April to October"
-)
-
-# Serbia
-HikeRoute.find_or_create_by!(
-  title: "Kopaonik - Pančićev Kamen",
-  description: "A challenging hike to Serbia's highest peak with panoramic views",
-  duration: 7,
-  difficulty: "hard",
-  distance: 18.5,
-  location_latitude: 43.4500,
-  location_longitude: 20.8500,
-  best_time_to_visit: "June to September"
-)
-
-HikeRoute.find_or_create_by!(
-  title: "Fruska Gora - Iriški Venac",
-  description: "A scenic hike through the historic Fruska Gora mountain with panoramic views",
-  duration: 4,
-  difficulty: "medium",
-  distance: 9.5,
-  location_latitude: 45.0833,
-  location_longitude: 19.6667,
-  best_time_to_visit: "March to November"
-)
-
-# Bosnia and Herzegovina
-HikeRoute.find_or_create_by!(
-  title: "Sutjeska National Park - Maglić",
-  description: "A challenging hike to Bosnia's highest peak in the Dinaric Alps",
-  duration: 8,
-  difficulty: "hard",
-  distance: 20.5,
-  location_latitude: 43.5833,
-  location_longitude: 18.7500,
-  best_time_to_visit: "June to September"
-)
-
-HikeRoute.find_or_create_by!(
-  title: "Blidinje Nature Park - Čvrsnica",
-  description: "A beautiful hike through Bosnia's karst landscape with numerous springs",
-  duration: 5,
-  difficulty: "medium",
-  distance: 12.5,
-  location_latitude: 43.6667,
-  location_longitude: 17.8333,
-  best_time_to_visit: "April to October"
-)
-
-# Albania
-HikeRoute.find_or_create_by!(
-  title: "Valbona Pass",
-  description: "A scenic hike through Albania's Albanian Alps with stunning views and traditional villages",
-  duration: 3,
-  difficulty: "medium",
-  distance: 10.0,
-  location_latitude: 42.3667,
-  location_longitude: 20.1667,
-  best_time_to_visit: "May to September"
-)
-
-HikeRoute.find_or_create_by!(
-  title: "Theth Valley",
-  description: "A beautiful hike through the remote Albanian Alps with traditional villages",
-  duration: 4,
-  difficulty: "medium",
-  distance: 11.5,
-  location_latitude: 42.4167,
-  location_longitude: 19.9167,
-  best_time_to_visit: "April to October"
-)
-
-# Macedonia
-HikeRoute.find_or_create_by!(
-  title: "Mavrovo National Park - Popova Šapka",
-  description: "A hike through Macedonia's largest national park with beautiful lakes and mountains",
-  duration: 5,
-  difficulty: "medium",
-  distance: 13.5,
-  location_latitude: 41.8333,
-  location_longitude: 21.3333,
-  best_time_to_visit: "May to September"
-)
-
-HikeRoute.find_or_create_by!(
-  title: "Pelister - Baba Mountain",
-  description: "A challenging hike to Macedonia's highest peak with beautiful views",
-  duration: 6,
-  difficulty: "hard",
-  distance: 16.5,
-  location_latitude: 41.0833,
-  location_longitude: 21.3333,
-  best_time_to_visit: "June to September"
-)
+  QuizQuestion.create!(
+    question: q[:question],
+    option_a: arranged[0],
+    option_b: arranged[1],
+    option_c: arranged[2],
+    option_d: arranged[3],
+    correct_option: %w[A B C D][target_idx]
+  )
+end

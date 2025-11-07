@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_07_170230) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_07_182335) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "cube"
   enable_extension "earthdistance"
@@ -78,6 +78,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_07_170230) do
     t.datetime "updated_at", null: false
     t.index ["hike_route_id"], name: "index_points_on_hike_route_id"
     t.index ["user_id"], name: "index_points_on_user_id"
+  end
+
+  create_table "quiz_questions", force: :cascade do |t|
+    t.string "question"
+    t.string "option_a"
+    t.string "option_b"
+    t.string "option_c"
+    t.string "option_d"
+    t.string "correct_option"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "users", force: :cascade do |t|
