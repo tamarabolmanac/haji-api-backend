@@ -22,7 +22,7 @@ class QuizRoomChannel < ApplicationCable::Channel
       p2_score: room.score_p2
     }
 
-    schedule_timeout(room)
+    #schedule_timeout(room)
   end
 
 
@@ -44,6 +44,33 @@ class QuizRoomChannel < ApplicationCable::Channel
           correct_option: question.correct_option
       }
 
+      # If both players have answered, advance immediately
+      if room.both_answered?
+        room.with_lock do
+          room.reload
+          if room.both_answered? && !room.game_over?
+            room.next_question!
+
+            if room.game_over?
+              ActionCable.server.broadcast "quiz_room_#{@room_id}", {
+                event: "game_over",
+                p1_score: room.score_p1,
+                p2_score: room.score_p2,
+                winner: room.score_p1 > room.score_p2 ? room.player1_id : room.player2_id
+              }
+            else
+              q = room.current_question
+              ActionCable.server.broadcast "quiz_room_#{@room_id}", {
+                event: "new_question",
+                current_question: serialize_question(q),
+                index: room.current_index
+              }
+              # schedule timeout for the new question index
+              #schedule_timeout(room)
+            end
+          end
+        end
+      end
     end
   end
 
