@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_07_182335) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_08_054740) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "cube"
   enable_extension "earthdistance"
@@ -50,6 +50,11 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_07_182335) do
     t.string "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.jsonb "questions", default: []
+    t.integer "current_index", default: 0
+    t.jsonb "answered", default: {}
+    t.integer "score_p1", default: 0
+    t.integer "score_p2", default: 0
   end
 
   create_table "hike_routes", force: :cascade do |t|

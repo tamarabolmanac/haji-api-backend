@@ -26,6 +26,8 @@ class ChallengeChannel < ApplicationCable::Channel
       player2_id: opponent_id
     )
 
+    room.assign_questions!
+
     ActionCable.server.broadcast("challenge_#{opponent_id}", {
       event: "challenge_accepted",
       room_id: room.id,
