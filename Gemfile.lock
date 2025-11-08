@@ -323,6 +323,12 @@ GEM
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 3.0)
       websocket (~> 1.0)
+    sidekiq (7.3.9)
+      base64
+      connection_pool (>= 2.3.0)
+      logger
+      rack (>= 2.2.4)
+      redis-client (>= 0.22.2)
     sshkit (1.24.0)
       base64
       logger
@@ -398,6 +404,7 @@ DEPENDENCIES
   redis
   rubocop-rails-omakase
   selenium-webdriver
+  sidekiq (~> 7.2)
   stimulus-rails
   thruster
   turbo-rails

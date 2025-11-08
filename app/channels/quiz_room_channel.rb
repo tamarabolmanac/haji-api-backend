@@ -22,7 +22,7 @@ class QuizRoomChannel < ApplicationCable::Channel
       p2_score: room.score_p2
     }
 
-    start_auto_timeout(room)
+    schedule_timeout(room)
   end
 
 
@@ -47,43 +47,12 @@ class QuizRoomChannel < ApplicationCable::Channel
     end
   end
 
-  def send_next_question(room)
-    room.next_question!
-
-    if room.game_over?
-      ActionCable.server.broadcast "quiz_room_#{@room_id}", {
-        event: "game_over",
-        p1_score: room.score_p1,
-        p2_score: room.score_p2,
-        winner: room.score_p1 > room.score_p2 ? room.player1_id : room.player2_id
-      }
-      return
-    end
-
-    q = room.current_question
-    Rails.logger.info "NEXT QUESTION: #{q.question}"
-    ActionCable.server.broadcast "quiz_room_#{@room_id}", {
-      event: "new_question",
-      current_question: serialize_question(q),
-      index: room.current_index
-    }
-
-    start_auto_timeout(room)
-  end
-
-  def start_auto_timeout(room)
-    Rails.logger.info "!!!!!!! Starting auto timeout"
-    Thread.new do
-      sleep 6
-
-      room.reload
-      next if room.game_over?
-
-      send_next_question(room)
-    end
-  end
-
   private
+
+  def schedule_timeout(room)
+    Rails.logger.info "!!!!!!! Scheduling timeout for room #{room.id}"
+    GameTimeoutJob.set(wait: 10.seconds).perform_later(room.id, room.current_index)
+  end
 
   def serialize_question(q)
     {
