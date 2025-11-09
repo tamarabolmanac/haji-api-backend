@@ -48,7 +48,7 @@ class GameRoom < ApplicationRecord
   def next_question!
     self.current_index += 1
     self.answered = {}
-    save
+    save!
   end
 
   def game_over?

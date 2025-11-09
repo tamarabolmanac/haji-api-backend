@@ -5,6 +5,7 @@ class ChallengeChannel < ApplicationCable::Channel
 
   # client sends: {action: "send_challenge", opponent_id: X}
   def send_challenge(data)
+    Rails.logger.info("Sending challenge from #{current_user.id} to #{data["opponent_id"]}")
     opponent_id = data["opponent_id"]
 
     ActionCable.server.broadcast(

@@ -21,65 +21,67 @@ class QuizRoomChannel < ApplicationCable::Channel
       p1_score: room.score_p1,
       p2_score: room.score_p2
     }
-
-    #schedule_timeout(room)
   end
-
 
   def answer_question(data)
     room = GameRoom.find(@room_id)
     user = current_user
-    question = room.current_question
 
-    unless room.already_answered?(user.id)
-      correct = (question.correct_option == data["answer"])
+    room.with_lock do
+      room.reload
+
+      # Ako je user već odgovorio, izlazimo
+      next if room.already_answered?(user.id)
+
+      correct = (room.current_question.correct_option == data["answer"])
       room.mark_answered(user.id, correct)
 
-      Rails.logger.info "!!!!!!! Answered #{room.already_answered?(user.id)}"
-
       ActionCable.server.broadcast "quiz_room_#{@room_id}", {
-          event: "answer_result",
-          user_id: user.id,
-          correct: correct,
-          correct_option: question.correct_option
+        event: "answer_result",
+        user_id: user.id,
+        correct: correct,
+        correct_option: room.current_question.correct_option
       }
 
-      # If both players have answered, advance immediately
+      # Ako su obojica odgovorili, prelazi se dalje
       if room.both_answered?
-        room.with_lock do
-          room.reload
-          if room.both_answered? && !room.game_over?
-            room.next_question!
+        room.next_question!
 
-            if room.game_over?
-              ActionCable.server.broadcast "quiz_room_#{@room_id}", {
-                event: "game_over",
-                p1_score: room.score_p1,
-                p2_score: room.score_p2,
-                winner: room.score_p1 > room.score_p2 ? room.player1_id : room.player2_id
-              }
-            else
-              q = room.current_question
-              ActionCable.server.broadcast "quiz_room_#{@room_id}", {
-                event: "new_question",
-                current_question: serialize_question(q),
-                index: room.current_index
-              }
-              # schedule timeout for the new question index
-              #schedule_timeout(room)
-            end
+        # Ponovo proveravamo game_over POSLE next_question
+        if room.game_over?
+          ActionCable.server.broadcast "quiz_room_#{@room_id}", {
+            event: "game_over",
+            p1_score: room.score_p1,
+            p2_score: room.score_p2,
+            winner: room.score_p1 > room.score_p2 ? room.player1_id : room.player2_id
+          }
+        else
+          q = room.current_question
+
+          # zaštita — nikad ne šaljemo serialize_question(nil)
+          if q.present?
+            ActionCable.server.broadcast "quiz_room_#{@room_id}", {
+              event: "new_question",
+              current_question: serialize_question(q),
+              index: room.current_index
+            }
+          else
+            # fallback — ako ikada dobijemo nil, šalji game_over
+            ActionCable.server.broadcast "quiz_room_#{@room_id}", {
+              event: "game_over",
+              p1_score: room.score_p1,
+              p2_score: room.score_p2,
+              winner: room.score_p1 > room.score_p2 ? room.player1_id : room.player2_id
+            }
           end
         end
       end
     end
   end
 
-  private
 
-  def schedule_timeout(room)
-    Rails.logger.info "!!!!!!! Scheduling timeout for room #{room.id}"
-    GameTimeoutJob.set(wait: 10.seconds).perform_later(room.id, room.current_index)
-  end
+
+  private
 
   def serialize_question(q)
     {
