@@ -18,6 +18,7 @@ Rails.application.routes.draw do
   
   # User routes
   get "/user_data", to: "users#user_data"
+  put "/user", to: "users#update"
   post "/add_point", to: "points#create"
   
   # Route tracking

@@ -4,6 +4,7 @@ class User < ApplicationRecord
 
   has_secure_password
   has_many :hike_routes, dependent: :destroy
+  has_one_attached :avatar
   
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, presence: true, length: { minimum: 6 }, allow_nil: true
@@ -11,7 +12,7 @@ class User < ApplicationRecord
   validates :name, presence: true
   validates :role, presence: true
   validates :city, presence: true
-  validates :country, presence: 
+  validates :country, presence: true
 
   def send_confirmation_email!
     UserMailer.confirmation(self, generate_confirmation_token).deliver_now

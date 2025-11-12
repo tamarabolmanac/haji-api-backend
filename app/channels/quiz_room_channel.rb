@@ -13,8 +13,8 @@ class QuizRoomChannel < ApplicationCable::Channel
       event: "room_info",
       room_id: @room_id,
       players: [
-        { id: room.player1.id, name: room.player1.name },
-        (room.player2 ? { id: room.player2.id, name: room.player2.name } : nil)
+        { id: room.player1.id, name: room.player1.name, avatar_url: avatar_url_for(room.player1) },
+        (room.player2 ? { id: room.player2.id, name: room.player2.name, avatar_url: avatar_url_for(room.player2) } : nil)
       ].compact,
       current_question: serialize_question(question),
       index: room.current_index,
@@ -94,5 +94,12 @@ class QuizRoomChannel < ApplicationCable::Channel
     }
   end
 
+  def avatar_url_for(user)
+    return nil unless user.respond_to?(:avatar) && user.avatar.attached?
+    path = Rails.application.routes.url_helpers.rails_blob_path(user.avatar, only_path: true)
+    base = ENV['PUBLIC_API_BASE_URL'].presence || (Rails.env.production? ? 'https://api.hajki.com' : 'http://localhost:3000')
+    "#{base}#{path}"
+  end
+ 
   
 end
