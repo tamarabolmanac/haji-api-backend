@@ -36,6 +36,9 @@ Rails.application.routes.draw do
 
   get "/online_users", to: "users#online"
 
+  # Google Authentication
+  post '/auth/google', to: 'sessions#google_auth'
+
   # ActionCable
   mount ActionCable.server => '/cable'
 

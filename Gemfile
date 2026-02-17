@@ -16,7 +16,10 @@ gem "turbo-rails"
 gem "stimulus-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
-gem 'jwt'
+gem 'jwt', '~> 2.7'
+# Google Auth Library for Ruby
+gem 'googleauth', '~> 1.8'
+gem 'net-http'
 
 gem "redis"
 
