@@ -39,6 +39,30 @@ class UsersController < ApiController
     end
   end
 
+  def forgot_password
+    @user = User.find_by(email: params[:email])
+    if @user
+      @user.send_password_reset_email!
+      render json: { message: "Email za reset lozinke je poslat." }, status: :ok
+    else
+      render json: { message: "Korisnik sa unetim emailom nije pronadjen." }, status: :not_found
+    end
+  end
+
+  def reset_password
+    @user = User.find_signed(params[:token], purpose: :password_reset)
+    
+    if @user.present?
+      if @user.update(password: params[:password], password_confirmation: params[:password_confirmation])
+        render json: { message: "Lozinka je uspešno promenjena." }, status: :ok
+      else
+        render json: { message: @user.errors.full_messages.join(", ") }, status: :unprocessable_entity
+      end
+    else
+      render json: { message: "Nevalidan ili istekao token." }, status: :unprocessable_entity
+    end
+  end
+
   def confirm
     @user = User.find_signed(params[:token])
 

@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   CONFIRMATION_TOKEN_EXPIRATION = 10.minutes
+  PASSWORD_RESET_TOKEN_EXPIRATION = 2.hours
   MAILER_FROM_EMAIL = 'info@hajki.com'
 
   has_secure_password
@@ -18,6 +19,10 @@ class User < ApplicationRecord
     UserMailer.confirmation(self, generate_confirmation_token).deliver_now
   end
 
+  def send_password_reset_email!
+    UserMailer.reset_password(self, generate_password_reset_token).deliver_now
+  end
+
   def confirm!
     update!(email_confirmed_at: Time.current)
   end
@@ -30,5 +35,9 @@ class User < ApplicationRecord
 
   def generate_confirmation_token
     signed_id(expires_in: CONFIRMATION_TOKEN_EXPIRATION)
+  end
+
+  def generate_password_reset_token
+    signed_id(purpose: :password_reset, expires_in: PASSWORD_RESET_TOKEN_EXPIRATION)
   end
 end

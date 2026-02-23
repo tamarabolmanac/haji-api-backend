@@ -26,6 +26,8 @@ Rails.application.routes.draw do
   post "/routes/:id/finalize", to: "hike_routes#finalize"
   
 
+  post "/forgot-password", to: "users#forgot_password"
+  post "/reset-password", to: "users#reset_password"
   get "/users/confirm/:token", to: "users#confirm"
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
