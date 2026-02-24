@@ -16,11 +16,11 @@ class User < ApplicationRecord
   validates :country, presence: true
 
   def send_confirmation_email!
-    UserMailer.confirmation(self, generate_confirmation_token).deliver_now
+    UserMailer.confirmation(self, generate_confirmation_token).deliver_later
   end
 
   def send_password_reset_email!
-    UserMailer.reset_password(self, generate_password_reset_token).deliver_now
+    UserMailer.reset_password(self, generate_password_reset_token).deliver_later
   end
 
   def confirm!
