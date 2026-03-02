@@ -2,11 +2,6 @@ require_relative "boot"
 
 require "rails/all"
 
-# Must load before Bundler.require so Sidekiq::ActiveJob is defined when ActiveJob
-# adapter loads. Fixes "uninitialized constant Sidekiq::ActiveJob" in production.
-# See: https://github.com/sidekiq/sidekiq/issues/6612
-require "sidekiq/rails"
-
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)

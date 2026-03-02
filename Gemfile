@@ -36,7 +36,9 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
 
-gem "sidekiq", "~> 7.3"
+# Pin to 7.3.8 - 7.3.9 has loading order bug: uninitialized constant Sidekiq::ActiveJob
+# See: https://github.com/sidekiq/sidekiq/issues/6612
+gem "sidekiq", "7.3.8"
 
 # Deploy this application anywhere as a Docker container [https://kamal-deploy.org]
 gem "kamal", require: false
