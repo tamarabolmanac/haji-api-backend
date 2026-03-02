@@ -23,6 +23,10 @@ gem 'net-http'
 
 gem "redis"
 
+# Pin to 2.x - connection_pool 3.x breaks Rails 8 redis_cache_store (ArgumentError)
+# See: https://github.com/rails/rails/issues/56291
+gem "connection_pool", "~> 2.4"
+
 gem "bcrypt", "~> 3.1.19"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
