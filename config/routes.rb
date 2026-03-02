@@ -43,8 +43,4 @@ Rails.application.routes.draw do
 
   # ActionCable
   mount ActionCable.server => '/cable'
-
-  # Sidekiq
-  require "sidekiq/web"
-  mount Sidekiq::Web => "/sidekiq"
 end

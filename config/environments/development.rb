@@ -31,7 +31,7 @@ Rails.application.configure do
   }
 
 
-  config.active_job.queue_adapter = :sidekiq
+  config.active_job.queue_adapter = :solid_queue
 
   
   # Enable/disable Action Controller caching. By default Action Controller caching is disabled.
