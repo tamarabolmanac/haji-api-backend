@@ -17,9 +17,12 @@ Rails.application.routes.draw do
   post "/auth/login", to: "auth#login"
   
   # User routes
+  get "/users", to: "users#index"
   get "/user_data", to: "users#user_data"
   put "/user", to: "users#update"
   post "/add_point", to: "points#create"
+  post "/users/:id/follow", to: "users#follow"
+  delete "/users/:id/unfollow", to: "users#unfollow"
   
   # Route tracking
   post "/routes/track_point", to: "hike_routes#track_point"

@@ -6,6 +6,10 @@ class User < ApplicationRecord
   has_secure_password
   has_many :hike_routes, dependent: :destroy
   has_one_attached :avatar
+  has_many :active_follows, class_name: "UserFollow", foreign_key: :follower_id, dependent: :destroy
+  has_many :following, through: :active_follows, source: :followed
+  has_many :passive_follows, class_name: "UserFollow", foreign_key: :followed_id, dependent: :destroy
+  has_many :followers, through: :passive_follows, source: :follower
   
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, presence: true, length: { minimum: 6 }, allow_nil: true
@@ -29,6 +33,19 @@ class User < ApplicationRecord
 
   def confirmed?
     email_confirmed_at.present?
+  end
+
+  def follow(other_user)
+    return if other_user == self
+    following << other_user unless following.exists?(other_user.id)
+  end
+
+  def unfollow(other_user)
+    active_follows.where(followed: other_user).destroy_all
+  end
+
+  def following?(other_user)
+    following.exists?(other_user.id)
   end
 
   private

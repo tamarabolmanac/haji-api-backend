@@ -5,18 +5,42 @@ class HikeRoutesController < ApiController
   before_action :authenticate_user, except: [:index, :show, :nearby]
   
   def index
-    hike_routes = HikeRoute
-      .left_joins(:points)
-      .select('hike_routes.*, COUNT(points.id) AS points_count')
-      .group('hike_routes.id')
-      .map do |route|
-        route.as_json.merge(
-          distance: route.distance,
-          duration: route.duration,
-          calculated_from_points: route.points_count >= 2,
-          points_count: route.points_count
-        )
+    # Allow optional authentication so da možemo da filtriramo po praćenim korisnicima
+    authenticate_token
+
+    scope = HikeRoute.left_joins(:points)
+                     .includes(:user)
+                     .select('hike_routes.*, COUNT(points.id) AS points_count')
+                     .group('hike_routes.id')
+
+    if params[:scope] == "following"
+      unless @current_user
+        render json: { status: 401, message: "Morate biti prijavljeni da biste videli feed ruta korisnika koje pratite." }, status: :unauthorized
+        return
       end
+
+      followed_ids = @current_user.following.select(:id)
+      # Po default-u u feed dodajemo i sopstvene rute
+      scope = scope.where(user_id: followed_ids).or(scope.where(user_id: @current_user.id))
+    end
+
+    hike_routes = scope.map do |route|
+      author = route.user
+
+      route.as_json.merge(
+        distance: route.distance,
+        duration: route.duration,
+        calculated_from_points: route.points_count >= 2,
+        points_count: route.points_count,
+        thumbnail_url: route.images.attached? ? presigned_url(route.images.first) : nil,
+        author: author ? {
+          id: author.id,
+          name: author.name,
+          avatar_url: author.avatar&.attached? ? avatar_url_for(author) : nil
+        } : nil
+      )
+    end
+
     render json: { data: hike_routes, status: 200, message: "Success" }
   end
 
@@ -359,5 +383,21 @@ class HikeRoutesController < ApiController
     
     obj = s3.bucket(ENV['R2_BUCKET_NAME']).object(image.key)
     obj.presigned_url(:get, expires_in: 15 * 60)
+  end
+
+  def avatar_url_for(user)
+    return nil unless user.avatar.attached?
+    begin
+      s3 = Aws::S3::Resource.new(
+        access_key_id: ENV['R2_ACCESS_KEY'],
+        secret_access_key: ENV['R2_SECRET_KEY'],
+        endpoint: ENV['R2_ENDPOINT'],
+        region: ENV['R2_REGION'] || 'auto'
+      )
+      obj = s3.bucket(ENV['R2_BUCKET_NAME']).object(user.avatar.blob.key)
+      obj.presigned_url(:get, expires_in: 15 * 60)
+    rescue => _e
+      nil
+    end
   end
 end

@@ -1,6 +1,25 @@
 class UsersController < ApiController
   include Utils
-  before_action :authenticate_user, only: [:user_data, :update]
+  before_action :authenticate_user, only: [:user_data, :update, :index, :follow, :unfollow]
+
+  def index
+    users = User.order(:name)
+
+    payload = users.map do |u|
+      {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        city: u.city,
+        country: u.country,
+        avatar_url: avatar_url_for(u),
+        is_me: u.id == @current_user.id,
+        is_following: @current_user.following.exists?(u.id)
+      }
+    end
+
+    render json: payload, status: :ok
+  end
 
   def user_data
     user_data = {
@@ -78,6 +97,33 @@ class UsersController < ApiController
     users = User.where(id: ids)
     payload = users.map { |u| { id: u.id, name: u.name, avatar_url: avatar_url_for(u) } }
     render json: payload
+  end
+
+  def follow
+    target = User.find(params[:id])
+
+    if target == @current_user
+      render json: { message: "Ne možete pratiti sami sebe." }, status: :unprocessable_entity
+      return
+    end
+
+    @current_user.follow(target)
+
+    render json: {
+      message: "Sada pratite korisnika.",
+      user_id: target.id
+    }, status: :ok
+  end
+
+  def unfollow
+    target = User.find(params[:id])
+
+    @current_user.unfollow(target)
+
+    render json: {
+      message: "Više ne pratite ovog korisnika.",
+      user_id: target.id
+    }, status: :ok
   end
 
   private
