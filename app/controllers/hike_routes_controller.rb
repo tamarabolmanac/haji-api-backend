@@ -107,10 +107,16 @@ class HikeRoutesController < ApiController
   end
   
   def show
-    hike = HikeRoute.includes(:points).find_by(id: params[:id])
+    hike = HikeRoute.includes(:points, :user).find_by(id: params[:id])
     if hike
       cache_key = "hike:#{hike.id}"
       data = Rails.cache.fetch(cache_key, expires_in: 10.minutes) do
+        author = hike.user
+        author_payload = author ? {
+          id: author.id,
+          name: author.name,
+          avatar_url: author.avatar&.attached? ? avatar_url_for(author) : nil
+        } : nil
 
         {
           data: hike.as_json.merge(
@@ -124,7 +130,8 @@ class HikeRoutesController < ApiController
             image_ids: hike.images.attached? ? hike.images.map(&:id) : [],
             points: hike.points.order(:timestamp).map do |p|
               { lat: p.lat, lng: p.lng, timestamp: p.timestamp }
-            end
+            end,
+            author: author_payload
           ),
           status: 200,
           message: "Success"

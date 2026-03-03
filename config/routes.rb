@@ -16,7 +16,9 @@ Rails.application.routes.draw do
   post "/auth/register", to: "auth#register"
   post "/auth/login", to: "auth#login"
   
-  # User routes
+  # User routes (show must be before /users/confirm/:token in matching - confirm is under confirm action)
+  get "/users/confirm/:token", to: "users#confirm"
+  get "/users/:id", to: "users#show", constraints: { id: /\d+/ }
   get "/users", to: "users#index"
   get "/user_data", to: "users#user_data"
   put "/user", to: "users#update"
@@ -31,7 +33,6 @@ Rails.application.routes.draw do
 
   post "/forgot-password", to: "users#forgot_password"
   post "/reset-password", to: "users#reset_password"
-  get "/users/confirm/:token", to: "users#confirm"
   # Render dynamic PWA files from app/views/pwa/* (remember to link manifest in application.html.erb)
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker

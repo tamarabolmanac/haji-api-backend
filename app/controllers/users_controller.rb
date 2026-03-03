@@ -1,6 +1,27 @@
 class UsersController < ApiController
   include Utils
   before_action :authenticate_user, only: [:user_data, :update, :index, :follow, :unfollow]
+  before_action :optional_auth_for_show, only: [:show]
+
+  def show
+    user = User.find_by(id: params[:id])
+    unless user
+      render json: { error: "Korisnik nije pronađen." }, status: :not_found
+      return
+    end
+
+    payload = {
+      id: user.id,
+      name: user.name,
+      city: user.city,
+      country: user.country,
+      avatar_url: avatar_url_for(user)
+    }
+    payload[:is_me] = (@current_user && @current_user.id == user.id)
+    payload[:is_following] = (@current_user && @current_user.following.exists?(user.id)) if @current_user
+
+    render json: payload, status: :ok
+  end
 
   def index
     users = User.order(:name)
@@ -127,6 +148,10 @@ class UsersController < ApiController
   end
 
   private
+
+  def optional_auth_for_show
+    authenticate_token
+  end
 
   def user_update_params
     params.permit(:name, :city, :country)
