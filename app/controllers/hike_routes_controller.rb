@@ -32,7 +32,6 @@ class HikeRoutesController < ApiController
         duration: route.duration,
         calculated_from_points: route.points_count >= 2,
         points_count: route.points_count,
-        thumbnail_url: route.images.attached? ? presigned_url(route.images.first) : nil,
         author: author ? {
           id: author.id,
           name: author.name,
@@ -380,31 +379,29 @@ class HikeRoutesController < ApiController
   def hike_params
     params.require(:hike_route).permit(:title, :description, :duration, :difficulty, :distance, :location_latitude, :location_longitude, :best_time_to_visit, :delete_all_images, images: [], existing_images: [], existing_image_ids: [])
   end
+
   def presigned_url(image)
-    s3 = Aws::S3::Resource.new(
-      access_key_id: ENV['R2_ACCESS_KEY'],
-      secret_access_key: ENV['R2_SECRET_KEY'],
-      endpoint: ENV['R2_ENDPOINT'],
-      region: ENV['R2_REGION'] || 'auto'
-    )
-    
-    obj = s3.bucket(ENV['R2_BUCKET_NAME']).object(image.key)
+    obj = s3_resource.bucket(ENV['R2_BUCKET_NAME']).object(image.key)
     obj.presigned_url(:get, expires_in: 15 * 60)
   end
 
   def avatar_url_for(user)
     return nil unless user.avatar.attached?
     begin
-      s3 = Aws::S3::Resource.new(
-        access_key_id: ENV['R2_ACCESS_KEY'],
-        secret_access_key: ENV['R2_SECRET_KEY'],
-        endpoint: ENV['R2_ENDPOINT'],
-        region: ENV['R2_REGION'] || 'auto'
-      )
-      obj = s3.bucket(ENV['R2_BUCKET_NAME']).object(user.avatar.blob.key)
+      obj = s3_resource.bucket(ENV['R2_BUCKET_NAME']).object(user.avatar.blob.key)
       obj.presigned_url(:get, expires_in: 15 * 60)
     rescue => _e
       nil
     end
+  end
+
+  # Memoizovani S3 resource – kreira se samo jednom po requestu
+  def s3_resource
+    @s3_resource ||= Aws::S3::Resource.new(
+      access_key_id: ENV['R2_ACCESS_KEY'],
+      secret_access_key: ENV['R2_SECRET_KEY'],
+      endpoint: ENV['R2_ENDPOINT'],
+      region: ENV['R2_REGION'] || 'auto'
+    )
   end
 end
