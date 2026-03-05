@@ -10,6 +10,8 @@ RUN apt-get update -qq && \
     git \
     libpq-dev \
     libvips \
+    imagemagick \
+    libwebp-dev \
     postgresql-client && \
     rm -rf /var/lib/apt/lists/*
 

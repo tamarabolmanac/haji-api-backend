@@ -9,7 +9,7 @@ class HikeRoutesController < ApiController
     authenticate_token
 
     scope = HikeRoute.left_joins(:points)
-                     .includes(:user)
+                     .includes(:user, images_attachments: :blob)
                      .select('hike_routes.*, COUNT(points.id) AS points_count')
                      .group('hike_routes.id')
 
@@ -32,6 +32,7 @@ class HikeRoutesController < ApiController
         duration: route.duration,
         calculated_from_points: route.points_count >= 2,
         points_count: route.points_count,
+        thumbnail_url: route.images.attached? ? presigned_url(route.images.first) : nil,
         author: author ? {
           id: author.id,
           name: author.name,
@@ -93,7 +94,7 @@ class HikeRoutesController < ApiController
     if @hike_route.save
       if params[:hike_route][:images].present?
         params[:hike_route][:images].each do |img|
-          @hike_route.images.attach(img)
+          @hike_route.images.attach(process_upload_image(img))
         end
       end
   
@@ -172,7 +173,7 @@ class HikeRoutesController < ApiController
     if hike_route.update(hike_params.except(:images, :existing_images, :existing_image_ids, :delete_all_images))
       if params[:hike_route][:images].present?
         params[:hike_route][:images].each do |img|
-          hike_route.images.attach(img)
+          hike_route.images.attach(process_upload_image(img))
         end
       end
 
@@ -393,6 +394,26 @@ class HikeRoutesController < ApiController
     rescue => _e
       nil
     end
+  end
+
+  # Resize i WebP pri uploadu – manji fajlovi, brže učitavanje
+  def process_upload_image(upload)
+    require "image_processing/mini_magick"
+    source = upload.respond_to?(:tempfile) ? upload.tempfile : upload
+    processed = ImageProcessing::MiniMagick
+      .source(source)
+      .resize_to_limit(1600, 1600)
+      .convert("webp")
+      .saver(quality: 82)
+      .call
+    {
+      io: File.open(processed.path),
+      filename: (upload.respond_to?(:original_filename) ? File.basename(upload.original_filename, ".*") : "image") + ".webp",
+      content_type: "image/webp"
+    }
+  rescue => e
+    Rails.logger.error "Image process on upload failed: #{e.message}"
+    upload
   end
 
   # Memoizovani S3 resource – kreira se samo jednom po requestu
