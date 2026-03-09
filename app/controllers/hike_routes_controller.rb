@@ -2,7 +2,8 @@
 require "aws-sdk-s3"
 
 class HikeRoutesController < ApiController
-  before_action :authenticate_user, except: [:index, :show, :nearby]
+  # Sve akcije sada zahtevaju autentikaciju — i index/show/nearby
+  before_action :authenticate_user
   
   def index
     # Allow optional authentication so da možemo da filtriramo po praćenim korisnicima

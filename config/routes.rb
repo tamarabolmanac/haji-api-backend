@@ -37,8 +37,8 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  # Root path ("/") — return 404 without RoutingError (API nema HTML homepage)
+  get "/", to: "application#not_found"
 
   get "/online_users", to: "users#online"
 
@@ -47,4 +47,7 @@ Rails.application.routes.draw do
 
   # ActionCable
   mount ActionCable.server => '/cable'
+
+  # Catch-all: bot probes (WordPress, xmlrpc, etc.) and unknown paths return 404 without raising RoutingError
+  match "*path", to: "application#not_found", via: :all
 end

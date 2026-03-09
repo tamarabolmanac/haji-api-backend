@@ -84,4 +84,12 @@ Rails.application.configure do
   config.action_cable.allowed_request_origins = [ /http:\/\/localhost:\d+/, /http:\/\/127.0.0.1:\d+/ ]
   config.action_cable.disable_request_forgery_protection = true
 
+  # Bullet: N+1 i unused eager loading – upozorenja u logu (development)
+  config.after_initialize do
+    Bullet.enable = true
+    Bullet.alert = false
+    Bullet.bullet_logger = true   # log/bullet.log
+    Bullet.console = true        # i u stdout
+    Bullet.rails_logger = true   # i u log/development.log
+  end
 end

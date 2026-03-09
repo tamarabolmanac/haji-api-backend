@@ -23,5 +23,8 @@ module HajkiApi
     #
     config.time_zone = "Belgrade"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Block common bot/scanner paths (wp-includes, xmlrpc, etc.) before Rails — returns 404, no DB
+    config.middleware.use "BlockBotProbes"
   end
 end

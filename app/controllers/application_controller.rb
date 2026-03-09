@@ -3,6 +3,11 @@ class ApplicationController < ActionController::Base
 
   allow_browser versions: :modern
 
+  # Catch-all for unknown paths (e.g. bot probes: /xmlrpc.php, /wp-includes/..., /) — no RoutingError, clean 404
+  def not_found
+    head :not_found
+  end
+
   private
 
   def authenticate_user
