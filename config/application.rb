@@ -1,6 +1,7 @@
 require_relative "boot"
 
 require "rails/all"
+require_relative "../lib/block_bot_probes"
 
 # Require the gems listed in Gemfile, including any gems
 # you've limited to :test, :development, or :production.
@@ -25,6 +26,6 @@ module HajkiApi
     # config.eager_load_paths << Rails.root.join("extras")
 
     # Block common bot/scanner paths (wp-includes, xmlrpc, etc.) before Rails — returns 404, no DB
-    config.middleware.use "BlockBotProbes"
+    config.middleware.use BlockBotProbes
   end
 end
