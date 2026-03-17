@@ -27,7 +27,9 @@ Rails.application.routes.draw do
   delete "/users/:id/unfollow", to: "users#unfollow"
   
   # Route tracking
+  post "/routes/start_new", to: "hike_routes#start_new"
   post "/routes/track_point", to: "hike_routes#track_point"
+  post "/routes/:id/start_tracking", to: "hike_routes#start_tracking"
   post "/routes/:id/finalize", to: "hike_routes#finalize"
   
 

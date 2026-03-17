@@ -10,12 +10,28 @@ class UsersController < ApiController
       return
     end
 
+    routes = user.hike_routes
+                 .left_joins(:points)
+                 .select('hike_routes.*, COUNT(points.id) AS points_count')
+                 .group('hike_routes.id')
+                 .map do |route|
+      {
+        id: route.id,
+        title: route.title,
+        description: route.description,
+        distance: route.distance,
+        duration: route.duration,
+        points_count: route.points_count.to_i
+      }
+    end
+
     payload = {
       id: user.id,
       name: user.name,
       city: user.city,
       country: user.country,
-      avatar_url: avatar_url_for(user)
+      avatar_url: avatar_url_for(user),
+      routes: routes
     }
     payload[:is_me] = (@current_user && @current_user.id == user.id)
     payload[:is_following] = (@current_user && @current_user.following.exists?(user.id)) if @current_user

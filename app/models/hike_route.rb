@@ -3,6 +3,8 @@ class HikeRoute < ApplicationRecord
   has_many_attached :images
   has_many :points, dependent: :destroy
   
+  STATUSES = %w[draft tracking finalized].freeze
+  
   # Invalidate cache when route is updated
   after_update :invalidate_cache
   
@@ -71,7 +73,8 @@ class HikeRoute < ApplicationRecord
       
       update_columns(
         distance: calculated_distance,
-        duration: calculated_duration
+        duration: calculated_duration,
+        status: "finalized"
       )
       
       true

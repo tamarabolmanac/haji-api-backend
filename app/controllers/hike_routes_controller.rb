@@ -239,7 +239,8 @@ class HikeRoutesController < ApiController
           description: "Automatski kreirana ruta tokom praćenja",
           difficulty: "medium",
           duration: 0,
-          distance: 0
+          distance: 0,
+          status: "tracking"
         )
         Rails.logger.info "✅ Created new route with ID: #{hike_route.id}, time: #{formatted_time}"
       else
@@ -346,7 +347,53 @@ class HikeRoutesController < ApiController
     end
   end
   
-  # Finalize route calculations when tracking is stopped
+  # Kreiranje potpuno nove rute za snimanje putanje (pre prvog GPS point-a)
+  def start_new
+    # Use timestamp from server time for default title
+    user_time = Time.current
+    formatted_time = user_time.strftime('%d.%m.%Y %H:%M')
+
+    hike_route = @current_user.hike_routes.create!(
+      title: "Nova ruta #{formatted_time}",
+      description: "Automatski kreirana ruta tokom praćenja",
+      difficulty: "medium",
+      duration: 0,
+      distance: 0,
+      status: "tracking"
+    )
+
+    render json: {
+      status: 200,
+      message: "Route created for tracking",
+      id: hike_route.id
+    }
+  rescue => e
+    Rails.logger.error "Error in start_new: #{e.message}"
+    render json: { status: 500, message: "Internal server error" }, status: :internal_server_error
+  end
+  
+  # Explicitno označi rutu kao "tracking" kada korisnik krene sa snimanjem
+  def start_tracking
+    route = @current_user.hike_routes.find_by(id: params[:id])
+
+    if route.nil?
+      render json: { status: 404, message: "Route not found or you don't have permission to start tracking" }
+      return
+    end
+
+    route.update_column(:status, "tracking")
+
+    render json: {
+      status: 200,
+      message: "Route tracking started",
+      data: {
+        id: route.id,
+        status: route.status
+      }
+    }
+  end
+  
+  # Finalize route when tracking is stopped
   def finalize
     route = @current_user.hike_routes.find_by(id: params[:id])
     
@@ -355,21 +402,34 @@ class HikeRoutesController < ApiController
       return
     end
 
-    if route.finalize_route!
-      render json: { 
-        status: 200, 
-        message: "Route finalized successfully",
+    if route.points.count >= 2
+      # Izračunaj distancu/vreme iz tačaka i označi kao finalized
+      if route.finalize_route!
+        render json: { 
+          status: 200, 
+          message: "Route finalized successfully",
+          data: {
+            id: route.id,
+            distance: route.distance,
+            duration: route.duration,
+            points_count: route.points.count
+          }
+        }
+      else
+        render json: { status: 400, message: "Cannot finalize route" }
+      end
+    else
+      # Premalo tačaka za proračun, ali svejedno je zaključavamo – bez opcije nastavka
+      route.update_column(:status, "finalized")
+      render json: {
+        status: 200,
+        message: "Route finalized without GPS stats (premalo tačaka)",
         data: {
           id: route.id,
           distance: route.distance,
           duration: route.duration,
           points_count: route.points.count
         }
-      }
-    else
-      render json: { 
-        status: 400, 
-        message: "Cannot finalize route: need at least 2 GPS points" 
       }
     end
   end
