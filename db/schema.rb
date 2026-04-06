@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_03_12_190000) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_04_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "cube"
   enable_extension "earthdistance"
@@ -82,6 +82,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_03_12_190000) do
     t.bigint "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "client_uuid"
+    t.index ["hike_route_id", "client_uuid"], name: "index_points_on_hike_route_id_and_client_uuid_unique", unique: true, where: "(client_uuid IS NOT NULL)"
     t.index ["hike_route_id"], name: "index_points_on_hike_route_id"
     t.index ["user_id"], name: "index_points_on_user_id"
   end

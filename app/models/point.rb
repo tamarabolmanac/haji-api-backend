@@ -5,6 +5,7 @@ class Point < ApplicationRecord
   validates :lat, :lng, presence: true
   validates :lat, inclusion: { in: -90..90 }
   validates :lng, inclusion: { in: -180..180 }
+  validates :client_uuid, uniqueness: { scope: :hike_route_id }, allow_nil: true
   
   after_save :invalidate_route_cache
   after_destroy :invalidate_route_cache, :update_route_calculations
