@@ -1,3 +1,10 @@
+GIT
+  remote: https://github.com/tamarabolmanac/overpass_routes_dsl.git
+  revision: 9377368af727a4f67154f0d0aa7c1821fac570cf
+  branch: main
+  specs:
+    overpass_routes_dsl (0.1.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -454,6 +461,7 @@ DEPENDENCIES
   kamal
   mini_magick
   net-http
+  overpass_routes_dsl!
   pg (~> 1.1)
   propshaft
   pry

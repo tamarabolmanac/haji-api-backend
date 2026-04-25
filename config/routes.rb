@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   get "/routes/:id", to: "hike_routes#show"
   get "/my_routes", to: "hike_routes#my_routes"
   get "/nearby", to: "hike_routes#nearby"
+  post "/nearby/overpass", to: "hike_routes#nearby_overpass"
   post "/new_route", to: "hike_routes#create"
   put "/routes/:id", to: "hike_routes#update"
   delete "/routes/:id", to: "hike_routes#destroy"
@@ -29,6 +30,7 @@ Rails.application.routes.draw do
   # Route tracking
   post "/routes/start_new", to: "hike_routes#start_new"
   post "/routes/track_point", to: "hike_routes#track_point"
+  post "/routes/track_points_bulk", to: "hike_routes#track_points_bulk"
   post "/routes/:id/start_tracking", to: "hike_routes#start_tracking"
   post "/routes/:id/finalize", to: "hike_routes#finalize"
   

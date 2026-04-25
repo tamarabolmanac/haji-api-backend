@@ -1,5 +1,6 @@
 
 require "aws-sdk-s3"
+require "set"
 
 class HikeRoutesController < ApiController
   # Sve akcije sada zahtevaju autentikaciju — i index/show/nearby
@@ -87,6 +88,59 @@ class HikeRoutesController < ApiController
       end
 
     render json: { data: nearby_routes, status: 200, message: "Success" }
+  end
+
+  # Nearby lookup using overpass_routes_dsl gem.
+  # Expects lat, lon, radius (km), mode, country.
+  def nearby_overpass
+    lat = Float(params[:lat])
+    lon = Float(params[:lon])
+    radius_km = Float(params[:radius])
+    radius_m = (radius_km * 1000).round
+    mode = params[:mode].to_s.presence || "peaks"
+    country = params[:country].to_s.presence || "Serbia"
+
+    supported_modes = %w[peaks hiking_paths]
+    unless supported_modes.include?(mode)
+      render json: { status: 400, message: "Unsupported mode. Allowed: #{supported_modes.join(', ')}" }, status: :bad_request
+      return
+    end
+
+    query = OverpassRoutesDsl.build do
+      country country
+      mode mode.to_sym
+      around lat, lon, radius_m: radius_m
+    end
+
+    client = OverpassRoutesDsl::Client.new
+    result = client.execute(query)
+
+    Rails.logger.info("[NearbyOverpass] params=#{{
+      lat: lat,
+      lon: lon,
+      radius_km: radius_km,
+      radius_m: radius_m,
+      mode: mode,
+      country: country
+    }.to_json}")
+    Rails.logger.info("[NearbyOverpass] result_elements=#{result.fetch('elements', []).size}")
+
+    render json: {
+      status: 200,
+      message: "Success",
+      query: query,
+      data: result
+    }
+  rescue ArgumentError, TypeError
+    render json: { status: 400, message: "Invalid parameters (lat, lon, radius are required numeric values)." }, status: :bad_request
+  rescue OverpassRoutesDsl::ValidationError => e
+    render json: { status: 422, message: e.message }, status: :unprocessable_entity
+  rescue OverpassRoutesDsl::Error => e
+    Rails.logger.error("[NearbyOverpass] Overpass error: #{e.message}")
+    render json: { status: 502, message: "Overpass request failed" }, status: :bad_gateway
+  rescue StandardError => e
+    Rails.logger.error("[NearbyOverpass] Unexpected error: #{e.class} #{e.message}\n#{e.backtrace&.first(8)&.join("\n")}")
+    render json: { status: 500, message: "Internal server error" }, status: :internal_server_error
   end
 
   def create
@@ -346,7 +400,122 @@ class HikeRoutesController < ApiController
       render json: { status: 500, message: "Internal server error" }
     end
   end
-  
+
+  # Bulk insert tačaka (offline queue / loš signal). Idempotentno po (hike_route_id, client_uuid).
+  # Telo: { "route_id": <opciono>, "points": [ { "lat", "lng", "timestamp?", "accuracy?", "client_uuid?" }, ... ] }
+  def track_points_bulk
+    permitted = bulk_track_params
+    points_data = permitted[:points]
+
+    unless points_data.is_a?(Array) && points_data.any?
+      render json: { status: 400, message: "points mora biti ne-prazan niz" }, status: :bad_request
+      return
+    end
+
+    if points_data.size > 200
+      render json: { status: 400, message: "Najviše 200 tačaka po zahtevu" }, status: :bad_request
+      return
+    end
+
+    raw_first = points_data.first
+    first_hash = raw_first.respond_to?(:to_unsafe_h) ? raw_first.to_unsafe_h : raw_first.stringify_keys
+    first_ts = first_hash["timestamp"] || first_hash[:timestamp]
+
+    hike_route = nil
+    rid = permitted[:route_id]
+
+    unless rid.nil? || rid.to_s.strip.empty? || rid.to_s == "null"
+      hike_route = HikeRoute.find_by(id: rid)
+      if hike_route.nil?
+        render json: { status: 404, message: "Ruta nije pronađena" }, status: :not_found
+        return
+      end
+      if hike_route.user_id != @current_user.id
+        render json: { status: 403, message: "You cannot edit route from another user" }, status: :forbidden
+        return
+      end
+    end
+
+    created_count = 0
+    skipped_duplicate = 0
+
+    ActiveRecord::Base.transaction do
+      hike_route ||= create_tracking_route_for_bulk!(first_ts)
+
+      seen_uuids = Set.new
+
+      points_data.each_with_index do |raw, index|
+        p = raw.respond_to?(:to_unsafe_h) ? raw.to_unsafe_h : raw.stringify_keys
+        lat = p["lat"] || p[:lat]
+        lng = p["lng"] || p[:lng]
+        if lat.nil? || lng.nil?
+          raise ArgumentError, "Tačka ##{index + 1}: lat i lng su obavezni"
+        end
+
+        parsed_ts = parse_point_timestamp(p["timestamp"] || p[:timestamp])
+        accuracy = p["accuracy"] || p[:accuracy]
+        cu = (p["client_uuid"] || p[:client_uuid]).to_s.presence
+
+        if cu.present? && seen_uuids.include?(cu)
+          next
+        end
+        seen_uuids.add(cu) if cu.present?
+
+        attrs = {
+          lat: lat.to_f,
+          lng: lng.to_f,
+          timestamp: parsed_ts
+        }
+        attrs[:accuracy] = accuracy.to_f unless accuracy.nil? || accuracy == ""
+
+        if cu.present?
+          point = hike_route.points.find_or_initialize_by(client_uuid: cu)
+          if point.persisted?
+            skipped_duplicate += 1
+            next
+          end
+          point.assign_attributes(attrs)
+          point.save!
+        else
+          hike_route.points.create!(attrs)
+        end
+        created_count += 1
+      end
+
+      Rails.cache.delete("hike:#{hike_route.id}")
+
+      if hike_route.points.count >= 2
+        hike_route.update_columns(
+          distance: hike_route.calculated_distance,
+          duration: hike_route.calculated_duration
+        )
+      end
+    end
+
+    hike_route.reload
+
+    render json: {
+      status: 200,
+      message: "Tačke obrađene",
+      route_id: hike_route.id,
+      created: created_count,
+      skipped_duplicate: skipped_duplicate,
+      points_count: hike_route.points.count,
+      route_stats: {
+        distance: hike_route.distance,
+        duration: hike_route.duration,
+        calculated_from_points: hike_route.points.count >= 2
+      }
+    }
+  rescue ArgumentError => e
+    render json: { status: 400, message: e.message }, status: :bad_request
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { status: 422, message: e.message, errors: e.record&.errors&.full_messages }, status: :unprocessable_entity
+  rescue StandardError => e
+    Rails.logger.error "track_points_bulk: #{e.class} #{e.message}\n#{e.backtrace&.first(10)&.join("\n")}"
+    render json: { status: 500, message: "Greška pri snimanju tačaka" }, status: :internal_server_error
+  end
+
   # Kreiranje potpuno nove rute za snimanje putanje (pre prvog GPS point-a)
   def start_new
     # Use timestamp from server time for default title
@@ -435,6 +604,38 @@ class HikeRoutesController < ApiController
   end
   
   private
+
+  def bulk_track_params
+    params.permit(:route_id, points: [:lat, :lng, :accuracy, :timestamp, :client_uuid])
+  end
+
+  def parse_point_timestamp(value)
+    return Time.current if value.blank?
+
+    begin
+      if value.to_s.match?(/^\d+$/)
+        Time.zone.at(value.to_i)
+      else
+        Time.zone.parse(value.to_s)
+      end
+    rescue ArgumentError => e
+      Rails.logger.warn "Invalid timestamp format: #{value.inspect}, error: #{e.message}, using current time"
+      Time.current
+    end
+  end
+
+  def create_tracking_route_for_bulk!(first_timestamp)
+    user_time = first_timestamp.present? ? parse_point_timestamp(first_timestamp) : Time.current
+    formatted_time = user_time.strftime("%d.%m.%Y %H:%M")
+    @current_user.hike_routes.create!(
+      title: "Nova ruta #{formatted_time}",
+      description: "Automatski kreirana ruta tokom praćenja",
+      difficulty: "medium",
+      duration: 0,
+      distance: 0,
+      status: "tracking"
+    )
+  end
 
   def hike_params
     params.require(:hike_route).permit(:title, :description, :duration, :difficulty, :distance, :location_latitude, :location_longitude, :best_time_to_visit, :delete_all_images, images: [], existing_images: [], existing_image_ids: [])
