@@ -5,6 +5,8 @@ class User < ApplicationRecord
 
   has_secure_password
   has_many :hike_routes, dependent: :destroy
+  has_many :route_likes, dependent: :destroy
+  has_many :liked_routes, through: :route_likes, source: :hike_route
   has_one_attached :avatar
   has_many :active_follows, class_name: "UserFollow", foreign_key: :follower_id, dependent: :destroy
   has_many :following, through: :active_follows, source: :followed

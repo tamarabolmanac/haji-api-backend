@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_04_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_04_30_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "cube"
   enable_extension "earthdistance"
@@ -97,6 +97,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_04_120000) do
     t.string "correct_option"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "route_likes", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "hike_route_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["hike_route_id"], name: "index_route_likes_on_hike_route_id"
+    t.index ["user_id", "hike_route_id"], name: "index_route_likes_on_user_id_and_hike_route_id", unique: true
+    t.index ["user_id"], name: "index_route_likes_on_user_id"
   end
 
   create_table "solid_queue_blocked_executions", force: :cascade do |t|
@@ -249,6 +259,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_04_120000) do
   add_foreign_key "hike_routes", "users"
   add_foreign_key "points", "hike_routes"
   add_foreign_key "points", "users"
+  add_foreign_key "route_likes", "hike_routes"
+  add_foreign_key "route_likes", "users"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_failed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

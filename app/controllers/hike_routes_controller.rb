@@ -26,7 +26,11 @@ class HikeRoutesController < ApiController
       scope = scope.where(user_id: followed_ids).or(scope.where(user_id: @current_user.id))
     end
 
-    hike_routes = scope.map do |route|
+    routes = scope.to_a
+    likes_counts = likes_counts_for(routes)
+    liked_route_ids = liked_route_ids_for(routes)
+
+    hike_routes = routes.map do |route|
       author = route.user
 
       route.as_json.merge(
@@ -34,6 +38,8 @@ class HikeRoutesController < ApiController
         duration: route.duration,
         calculated_from_points: route.points_count >= 2,
         points_count: route.points_count,
+        likes_count: likes_counts[route.id] || 0,
+        liked_by_current_user: liked_route_ids.include?(route.id),
         thumbnail_url: route.images.attached? ? presigned_url(route.images.first) : nil,
         author: author ? {
           id: author.id,
@@ -47,12 +53,18 @@ class HikeRoutesController < ApiController
   end
 
   def my_routes
-    user_routes = @current_user.hike_routes.includes(:points).map do |route|
+    routes = @current_user.hike_routes.includes(:points).to_a
+    likes_counts = likes_counts_for(routes)
+    liked_route_ids = liked_route_ids_for(routes)
+
+    user_routes = routes.map do |route|
       route.as_json.merge(
         distance: route.distance,
         duration: route.duration,
         calculated_from_points: route.points.count >= 2,
-        points_count: route.points.count
+        points_count: route.points.count,
+        likes_count: likes_counts[route.id] || 0,
+        liked_by_current_user: liked_route_ids.include?(route.id)
       )
     end
     render json: { data: user_routes, status: 200, message: "Success" }
@@ -73,19 +85,25 @@ class HikeRoutesController < ApiController
     @points = Point.near(lat, lng, radius)
     route_ids = @points.pluck(:hike_route_id).uniq
 
-    nearby_routes = HikeRoute
+    routes = HikeRoute
       .where(id: route_ids)
       .left_joins(:points)
       .select('hike_routes.*, COUNT(points.id) AS points_count')
       .group('hike_routes.id')
-      .map do |route|
-        route.as_json.merge(
-          distance: route.distance,
-          duration: route.duration,
-          calculated_from_points: route.points_count >= 2,
-          points_count: route.points_count
-        )
-      end
+      .to_a
+    likes_counts = likes_counts_for(routes)
+    liked_route_ids = liked_route_ids_for(routes)
+
+    nearby_routes = routes.map do |route|
+      route.as_json.merge(
+        distance: route.distance,
+        duration: route.duration,
+        calculated_from_points: route.points_count >= 2,
+        points_count: route.points_count,
+        likes_count: likes_counts[route.id] || 0,
+        liked_by_current_user: liked_route_ids.include?(route.id)
+      )
+    end
 
     render json: { data: nearby_routes, status: 200, message: "Success" }
   end
@@ -100,7 +118,7 @@ class HikeRoutesController < ApiController
     mode = params[:mode].to_s.presence || "peaks"
     country = params[:country].to_s.presence || "Serbia"
 
-    supported_modes = %w[peaks hiking_paths]
+    supported_modes = %w[peaks hiking_paths hiking_routes bike]
     unless supported_modes.include?(mode)
       render json: { status: 400, message: "Unsupported mode. Allowed: #{supported_modes.join(', ')}" }, status: :bad_request
       return
@@ -165,7 +183,7 @@ class HikeRoutesController < ApiController
     hike = HikeRoute.includes(:points, :user).find_by(id: params[:id])
     if hike
       cache_key = "hike:#{hike.id}"
-      data = Rails.cache.fetch(cache_key, expires_in: 10.minutes) do
+      payload = Rails.cache.fetch(cache_key, expires_in: 10.minutes) do
         author = hike.user
         author_payload = author ? {
           id: author.id,
@@ -193,7 +211,11 @@ class HikeRoutesController < ApiController
         }
       end
 
-      render json: data
+      payload = payload.deep_dup
+      payload[:data][:likes_count] = hike.route_likes.count
+      payload[:data][:liked_by_current_user] = @current_user ? hike.route_likes.exists?(user_id: @current_user.id) : false
+
+      render json: payload
     else
       render json: { status: 404, message: "Route not found" }
     end
@@ -268,6 +290,42 @@ class HikeRoutesController < ApiController
   rescue => e
     Rails.logger.error "Error deleting route: #{e.message}"
     render json: { status: 500, message: "Greška pri brisanju rute" }
+  end
+
+  def like
+    hike_route = HikeRoute.find_by(id: params[:id])
+    unless hike_route
+      render json: { status: 404, message: "Route not found" }, status: :not_found
+      return
+    end
+
+    @current_user.route_likes.find_or_create_by!(hike_route: hike_route)
+    Rails.cache.delete("hike:#{hike_route.id}")
+
+    render json: {
+      status: 200,
+      message: "Route liked",
+      data: like_payload_for(hike_route, liked: true)
+    }
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { status: 422, message: e.message, errors: e.record.errors.full_messages }, status: :unprocessable_entity
+  end
+
+  def unlike
+    hike_route = HikeRoute.find_by(id: params[:id])
+    unless hike_route
+      render json: { status: 404, message: "Route not found" }, status: :not_found
+      return
+    end
+
+    @current_user.route_likes.where(hike_route: hike_route).destroy_all
+    Rails.cache.delete("hike:#{hike_route.id}")
+
+    render json: {
+      status: 200,
+      message: "Route unliked",
+      data: like_payload_for(hike_route, liked: false)
+    }
   end
 
   def track_point
@@ -604,6 +662,30 @@ class HikeRoutesController < ApiController
   end
   
   private
+
+  def likes_counts_for(routes)
+    ids = routes.map(&:id)
+    return {} if ids.empty?
+
+    RouteLike.where(hike_route_id: ids).group(:hike_route_id).count
+  end
+
+  def liked_route_ids_for(routes)
+    return Set.new unless @current_user
+
+    ids = routes.map(&:id)
+    return Set.new if ids.empty?
+
+    RouteLike.where(user_id: @current_user.id, hike_route_id: ids).pluck(:hike_route_id).to_set
+  end
+
+  def like_payload_for(hike_route, liked:)
+    {
+      id: hike_route.id,
+      likes_count: hike_route.route_likes.count,
+      liked_by_current_user: liked
+    }
+  end
 
   def bulk_track_params
     params.permit(:route_id, points: [:lat, :lng, :accuracy, :timestamp, :client_uuid])

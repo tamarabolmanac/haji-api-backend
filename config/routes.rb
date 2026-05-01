@@ -12,6 +12,8 @@ Rails.application.routes.draw do
   post "/new_route", to: "hike_routes#create"
   put "/routes/:id", to: "hike_routes#update"
   delete "/routes/:id", to: "hike_routes#destroy"
+  post "/routes/:id/like", to: "hike_routes#like"
+  delete "/routes/:id/like", to: "hike_routes#unlike"
 
   # Authentication routes
   post "/auth/register", to: "auth#register"
