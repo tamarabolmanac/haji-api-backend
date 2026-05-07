@@ -11,7 +11,7 @@ class HikeRoutesController < ApiController
     authenticate_token
 
     scope = HikeRoute.left_joins(:points)
-                     .includes(:user, images_attachments: :blob)
+                     .includes({ user: { avatar_attachment: :blob } }, images_attachments: :blob)
                      .select('hike_routes.*, COUNT(points.id) AS points_count')
                      .group('hike_routes.id')
 
@@ -53,7 +53,11 @@ class HikeRoutesController < ApiController
   end
 
   def my_routes
-    routes = @current_user.hike_routes.includes(:points).to_a
+    routes = @current_user.hike_routes
+                          .left_joins(:points)
+                          .select('hike_routes.*, COUNT(points.id) AS points_count')
+                          .group('hike_routes.id')
+                          .to_a
     likes_counts = likes_counts_for(routes)
     liked_route_ids = liked_route_ids_for(routes)
 
@@ -61,8 +65,8 @@ class HikeRoutesController < ApiController
       route.as_json.merge(
         distance: route.distance,
         duration: route.duration,
-        calculated_from_points: route.points.count >= 2,
-        points_count: route.points.count,
+        calculated_from_points: route.points_count >= 2,
+        points_count: route.points_count,
         likes_count: likes_counts[route.id] || 0,
         liked_by_current_user: liked_route_ids.include?(route.id)
       )
