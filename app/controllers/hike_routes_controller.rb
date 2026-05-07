@@ -7,13 +7,14 @@ class HikeRoutesController < ApiController
   before_action :authenticate_user
   
   def index
-    # Allow optional authentication so da možemo da filtriramo po praćenim korisnicima
-    authenticate_token
+    page     = (params[:page].presence || 1).to_i
+    per_page = (params[:per_page].presence || 20).to_i.clamp(1, 50)
 
     scope = HikeRoute.left_joins(:points)
                      .includes({ user: { avatar_attachment: :blob } }, images_attachments: :blob)
                      .select('hike_routes.*, COUNT(points.id) AS points_count')
                      .group('hike_routes.id')
+                     .order('hike_routes.created_at DESC')
 
     if params[:scope] == "following"
       unless @current_user
@@ -22,12 +23,13 @@ class HikeRoutesController < ApiController
       end
 
       followed_ids = @current_user.following.select(:id)
-      # Po default-u u feed dodajemo i sopstvene rute
       scope = scope.where(user_id: followed_ids).or(scope.where(user_id: @current_user.id))
     end
 
-    routes = scope.to_a
-    likes_counts = likes_counts_for(routes)
+    total  = scope.except(:select, :group, :order).count("DISTINCT hike_routes.id")
+    routes = scope.limit(per_page).offset((page - 1) * per_page).to_a
+
+    likes_counts    = likes_counts_for(routes)
     liked_route_ids = liked_route_ids_for(routes)
 
     hike_routes = routes.map do |route|
@@ -49,7 +51,12 @@ class HikeRoutesController < ApiController
       )
     end
 
-    render json: { data: hike_routes, status: 200, message: "Success" }
+    render json: {
+      data: hike_routes,
+      meta: { page: page, per_page: per_page, total: total, total_pages: (total.to_f / per_page).ceil },
+      status: 200,
+      message: "Success"
+    }
   end
 
   def my_routes
