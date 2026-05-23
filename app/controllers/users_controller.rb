@@ -25,14 +25,21 @@ class UsersController < ApiController
       }
     end
 
+    total_distance = user.total_distance.to_f
+    total_duration = user.total_duration.to_i
+
     payload = {
       id: user.id,
       name: user.name,
       city: user.city,
       country: user.country,
       avatar_url: avatar_url_for(user),
-      routes: routes
+      routes: routes,
+      total_distance: total_distance,
+      total_duration: total_duration,
+      routes_count: routes.length
     }
+    binding.pry
     payload[:is_me] = (@current_user && @current_user.id == user.id)
     payload[:is_following] = (@current_user && @current_user.following.exists?(user.id)) if @current_user
 
@@ -59,6 +66,8 @@ class UsersController < ApiController
   end
 
   def user_data
+    routes_count = @current_user.hike_routes.count
+
     user_data = {
       id: @current_user.id,
       name: @current_user.name,
@@ -66,7 +75,10 @@ class UsersController < ApiController
       role: @current_user.role,
       city: @current_user.city,
       country: @current_user.country,
-      avatar_url: avatar_url_for(@current_user)
+      avatar_url: avatar_url_for(@current_user),
+      total_distance: @current_user.total_distance.to_f,
+      total_duration: @current_user.total_duration.to_i,
+      routes_count: routes_count
     }
     render json: user_data, status: :ok
   rescue ActiveRecord::RecordNotFound

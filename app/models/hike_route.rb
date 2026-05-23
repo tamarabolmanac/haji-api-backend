@@ -9,6 +9,9 @@ class HikeRoute < ApplicationRecord
   
   # Invalidate cache when route is updated
   after_update :invalidate_cache
+  # Update user stats when route is finalized or deleted
+  after_save :update_user_stats, if: :saved_change_to_status?
+  after_destroy :update_user_stats
   
   # Calculate distance from points using Haversine formula
   def calculated_distance
@@ -89,6 +92,15 @@ class HikeRoute < ApplicationRecord
   
   def invalidate_cache
     Rails.cache.delete("hike:#{id}")
+  end
+
+  def update_user_stats
+    return unless user
+    routes = user.hike_routes.includes(:points)
+    user.update_columns(
+      total_distance: routes.sum(&:display_distance).to_f.round(2),
+      total_duration: routes.sum(&:display_duration).to_i
+    )
   end
   
   # Haversine formula to calculate distance between two points

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_04_30_090000) do
+ActiveRecord::Schema[8.0].define(version: 2026_05_23_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "cube"
   enable_extension "earthdistance"
@@ -252,6 +252,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_04_30_090000) do
     t.datetime "updated_at", null: false
     t.string "password_digest"
     t.datetime "email_confirmed_at"
+    t.decimal "total_distance", precision: 10, scale: 2, default: "0.0", null: false
+    t.integer "total_duration", default: 0, null: false
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
