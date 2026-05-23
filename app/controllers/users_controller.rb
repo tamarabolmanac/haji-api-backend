@@ -39,7 +39,6 @@ class UsersController < ApiController
       total_duration: total_duration,
       routes_count: routes.length
     }
-    binding.pry
     payload[:is_me] = (@current_user && @current_user.id == user.id)
     payload[:is_following] = (@current_user && @current_user.following.exists?(user.id)) if @current_user
 
