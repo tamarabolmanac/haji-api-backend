@@ -37,7 +37,8 @@ class RecommendationsController < ApiController
     parts << "Na osnovu ovih kriterijuma, predloži 3–5 konkretnih lokacija u Srbiji."
     parts << "Odgovori ISKLJUČIVO validnim JSON nizom, bez ikakvog dodatnog teksta pre ili posle JSON-a."
     parts << "Format:"
-    parts << '[{"name":"Naziv destinacije","distance":"X–Y km","description":"Kratki opis lokacije.","why":"Zašto odgovara kriterijumima."}]'
+    parts << '[{"name":"Naziv destinacije","distance":"X–Y km","description":"Kratki opis lokacije.","why":"Zašto odgovara kriterijumima.","lat":44.8125,"lon":20.4612}]'
+    parts << "lat i lon moraju biti tačne GPS koordinate te lokacije u Srbiji (decimalni broj)."
     parts << "Piši na srpskom jeziku, prijateljskim tonom."
 
     parts.join("\n")
