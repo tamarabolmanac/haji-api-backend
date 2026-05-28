@@ -1,5 +1,7 @@
 Rails.application.routes.draw do
   get '/health', to: 'health#check'
+  get '/osm_routes', to: 'osm_routes#index'
+  get '/protected_areas', to: 'protected_areas#index'
   post '/recommendations', to: 'recommendations#create'
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

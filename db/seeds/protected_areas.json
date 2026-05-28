@@ -1,0 +1,266 @@
+[
+  {
+    "name": "Đerdap",
+    "type": "national_park",
+    "lat": 44.5341,
+    "lon": 22.0745,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Fruška Gora",
+    "type": "national_park",
+    "lat": 45.1500,
+    "lon": 19.7000,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Kopaonik",
+    "type": "national_park",
+    "lat": 43.2920,
+    "lon": 20.8120,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Tara",
+    "type": "national_park",
+    "lat": 43.9000,
+    "lon": 19.5000,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Šar-planina",
+    "type": "national_park",
+    "lat": 42.1667,
+    "lon": 21.0000,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Stara Planina",
+    "type": "nature_park",
+    "lat": 43.3500,
+    "lon": 22.6000,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Zlatibor",
+    "type": "nature_park",
+    "lat": 43.7267,
+    "lon": 19.7089,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Golija",
+    "type": "nature_park",
+    "lat": 43.3500,
+    "lon": 20.2333,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Šargan-Mokra Gora",
+    "type": "nature_park",
+    "lat": 43.8167,
+    "lon": 19.6333,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Zasavica",
+    "type": "nature_park",
+    "lat": 44.8000,
+    "lon": 19.3333,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Ludaš",
+    "type": "nature_park",
+    "lat": 46.0700,
+    "lon": 19.8200,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Palić",
+    "type": "nature_park",
+    "lat": 46.1000,
+    "lon": 19.7667,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Grza",
+    "type": "nature_park",
+    "lat": 43.8000,
+    "lon": 21.8833,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Radan",
+    "type": "nature_park",
+    "lat": 42.9833,
+    "lon": 21.8000,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Vlasina",
+    "type": "nature_park",
+    "lat": 42.7000,
+    "lon": 22.3500,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Sićevačka klisura",
+    "type": "nature_park",
+    "lat": 43.3333,
+    "lon": 22.0833,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Ozren-Devica",
+    "type": "nature_park",
+    "lat": 43.5500,
+    "lon": 21.9500,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Kanjon reke Trešnjice",
+    "type": "nature_park",
+    "lat": 44.0167,
+    "lon": 19.3000,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Rtanj",
+    "type": "mountain",
+    "lat": 43.7833,
+    "lon": 21.9000,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Avala",
+    "type": "mountain",
+    "lat": 44.6934,
+    "lon": 20.5167,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Rudnik",
+    "type": "mountain",
+    "lat": 44.1167,
+    "lon": 20.5167,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Suva Planina",
+    "type": "mountain",
+    "lat": 43.2000,
+    "lon": 22.1167,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Miroč",
+    "type": "mountain",
+    "lat": 44.4167,
+    "lon": 22.3167,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Beljanica",
+    "type": "mountain",
+    "lat": 44.0333,
+    "lon": 21.7167,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Kučaj",
+    "type": "mountain",
+    "lat": 43.9500,
+    "lon": 21.9500,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Povlen",
+    "type": "mountain",
+    "lat": 44.1000,
+    "lon": 19.7333,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Maljen",
+    "type": "mountain",
+    "lat": 44.1333,
+    "lon": 20.0667,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Željin",
+    "type": "mountain",
+    "lat": 43.5833,
+    "lon": 20.8667,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Jastrebac",
+    "type": "mountain",
+    "lat": 43.4833,
+    "lon": 21.4167,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Goč",
+    "type": "mountain",
+    "lat": 43.6000,
+    "lon": 20.9500,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Ozren (Sokobanja)",
+    "type": "mountain",
+    "lat": 43.6500,
+    "lon": 21.8833,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Vidlič",
+    "type": "mountain",
+    "lat": 43.0667,
+    "lon": 22.5833,
+    "description": "",
+    "image": null
+  },
+  {
+    "name": "Homoljske planine",
+    "type": "mountain",
+    "lat": 44.1667,
+    "lon": 21.9167,
+    "description": "",
+    "image": null
+  }
+]
