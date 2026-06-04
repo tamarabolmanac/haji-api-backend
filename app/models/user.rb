@@ -1,6 +1,7 @@
 class User < ApplicationRecord
   CONFIRMATION_TOKEN_EXPIRATION = 10.minutes
   PASSWORD_RESET_TOKEN_EXPIRATION = 2.hours
+  ACCOUNT_DELETION_TOKEN_EXPIRATION = 24.hours
   MAILER_FROM_EMAIL = 'info@hajki.com'
 
   has_secure_password
@@ -27,6 +28,10 @@ class User < ApplicationRecord
 
   def send_password_reset_email!
     UserMailer.reset_password(self, generate_password_reset_token).deliver_later
+  end
+
+  def send_deletion_confirmation_email!
+    UserMailer.deletion_confirmation(self, generate_deletion_token).deliver_later
   end
 
   def confirm!
@@ -58,5 +63,9 @@ class User < ApplicationRecord
 
   def generate_password_reset_token
     signed_id(purpose: :password_reset, expires_in: PASSWORD_RESET_TOKEN_EXPIRATION)
+  end
+
+  def generate_deletion_token
+    signed_id(purpose: :account_deletion, expires_in: ACCOUNT_DELETION_TOKEN_EXPIRATION)
   end
 end

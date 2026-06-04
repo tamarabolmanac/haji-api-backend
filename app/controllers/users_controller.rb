@@ -1,6 +1,6 @@
 class UsersController < ApiController
   include Utils
-  before_action :authenticate_user, only: [:user_data, :update, :index, :follow, :unfollow]
+  before_action :authenticate_user, only: [:user_data, :update, :index, :follow, :unfollow, :request_deletion]
   before_action :optional_auth_for_show, only: [:show]
 
   def show
@@ -172,6 +172,27 @@ class UsersController < ApiController
       message: "Više ne pratite ovog korisnika.",
       user_id: target.id
     }, status: :ok
+  end
+
+  def request_deletion
+    unless @current_user.id == params[:id].to_i
+      render json: { error: "Nemate dozvolu za ovu akciju." }, status: :forbidden
+      return
+    end
+
+    @current_user.send_deletion_confirmation_email!
+    render json: { message: "Email za potvrdu brisanja naloga je poslat." }, status: :ok
+  end
+
+  def confirm_deletion
+    user = User.find_signed(params[:token], purpose: :account_deletion)
+
+    if user.present?
+      user.destroy!
+      render json: { message: "Nalog je uspešno obrisan." }, status: :ok
+    else
+      render json: { message: "Nevalidan ili istekao link." }, status: :unprocessable_entity
+    end
   end
 
   private

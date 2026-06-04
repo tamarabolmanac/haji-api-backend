@@ -34,6 +34,8 @@ Rails.application.routes.draw do
   post "/add_point", to: "points#create"
   post "/users/:id/follow", to: "users#follow"
   delete "/users/:id/unfollow", to: "users#unfollow"
+  post "/users/:id/request_deletion", to: "users#request_deletion"
+  delete "/users/confirm_deletion", to: "users#confirm_deletion"
   
   # Route tracking
   post "/routes/start_new", to: "hike_routes#start_new"

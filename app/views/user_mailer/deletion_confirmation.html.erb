@@ -1,0 +1,52 @@
+<!-- app/views/user_mailer/deletion_confirmation.html.erb -->
+<!DOCTYPE html>
+<html>
+  <body style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="text-align: center; margin-bottom: 30px;">
+      <h2 style="color: #556B2F; margin-bottom: 10px;">Hajki</h2>
+      <h1 style="color: #333; font-size: 24px; margin-bottom: 20px;">Brisanje naloga</h1>
+    </div>
+
+    <p>
+      Zdravo <%= @user.name.presence || "planinaru" %>,
+    </p>
+
+    <p>
+      Primili smo zahtev za brisanje tvog Hajki naloga. Ako zaista želiš da obrišeš nalog, klikni na dugme ispod:
+    </p>
+
+    <div style="text-align: center; margin: 30px 0;">
+      <a href="https://hajki.com/delete-account?token=<%= @token %>"
+         style="background: linear-gradient(135deg, #c62828, #e53935);
+                color: white;
+                padding: 15px 30px;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 16px;
+                display: inline-block;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        Potvrdi brisanje naloga
+      </a>
+    </div>
+
+    <p style="background-color: #fff5f5; padding: 15px; border-radius: 6px; border-left: 4px solid #e53935;">
+      <strong>Upozorenje:</strong> Ova akcija je nepovratna. Svi tvoji podaci, rute i slike biće trajno obrisani. Link je važeći 24 sata.
+    </p>
+
+    <p>
+      Ako nisi tražio/la brisanje naloga, možeš bezbedno ignorisati ovaj email — nalog neće biti obrisan.
+    </p>
+
+    <p style="background-color: #f1f3f4; padding: 10px; border-radius: 4px; word-break: break-all; font-size: 12px;">
+      https://hajki.com/delete-account?token=<%= @token %>
+    </p>
+
+    <hr style="margin: 40px 0; border: none; border-top: 1px solid #e0e0e0;">
+
+    <div style="text-align: center; color: #666; font-size: 14px;">
+      <p>Pozdrav iz Hajki tima! 🌲</p>
+      <p>Ovaj email je automatski generisan. Molimo ne odgovarajte na njega.</p>
+    </div>
+  </body>
+</html>

@@ -14,4 +14,11 @@ class UserMailer < ApplicationMailer
 
     mail to: @user.email, subject: "Reset Password Instructions"
   end
+
+  def deletion_confirmation(user, token)
+    @user = user
+    @token = token
+
+    mail to: @user.email, subject: "Potvrda brisanja Hajki naloga"
+  end
 end
