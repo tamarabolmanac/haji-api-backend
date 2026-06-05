@@ -1,8 +1,8 @@
 class HikeRoute < ApplicationRecord
   belongs_to :user
   has_many_attached :images
-  has_many :points, dependent: :destroy
-  has_many :route_likes, dependent: :destroy
+  has_many :points, dependent: :delete_all
+  has_many :route_likes, dependent: :delete_all
   has_many :liked_by_users, through: :route_likes, source: :user
   
   STATUSES = %w[draft tracking finalized].freeze
@@ -96,10 +96,9 @@ class HikeRoute < ApplicationRecord
 
   def update_user_stats
     return unless user
-    routes = user.hike_routes.includes(:points)
     user.update_columns(
-      total_distance: routes.sum(&:display_distance).to_f.round(2),
-      total_duration: routes.sum(&:display_duration).to_i
+      total_distance: user.hike_routes.sum(:distance).to_f.round(2),
+      total_duration: user.hike_routes.sum(:duration).to_i
     )
   end
   
