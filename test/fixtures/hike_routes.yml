@@ -1,0 +1,10 @@
+test_route:
+  title: "Test ruta"
+  description: "Opis test rute"
+  difficulty: "laka"
+  distance: 5.0
+  duration: 90
+  status: "finalized"
+  location_latitude: 44.8125
+  location_longitude: 20.4612
+  user: test_user

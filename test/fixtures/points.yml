@@ -1,0 +1,14 @@
+point_one:
+  lat: 44.8125
+  lng: 20.4612
+  hike_route: test_route
+
+point_two:
+  lat: 44.8130
+  lng: 20.4620
+  hike_route: test_route
+
+point_three:
+  lat: 44.8140
+  lng: 20.4630
+  hike_route: test_route

@@ -29,8 +29,9 @@ class HikeRoutesController < ApiController
     total  = scope.except(:select, :group, :order).count("DISTINCT hike_routes.id")
     routes = scope.limit(per_page).offset((page - 1) * per_page).to_a
 
-    likes_counts    = likes_counts_for(routes)
-    liked_route_ids = liked_route_ids_for(routes)
+    likes_counts         = likes_counts_for(routes)
+    liked_route_ids      = liked_route_ids_for(routes)
+    bookmarked_route_ids = bookmarked_route_ids_for(routes)
 
     hike_routes = routes.map do |route|
       author = route.user
@@ -42,6 +43,7 @@ class HikeRoutesController < ApiController
         points_count: route.points_count,
         likes_count: likes_counts[route.id] || 0,
         liked_by_current_user: liked_route_ids.include?(route.id),
+        bookmarked_by_current_user: bookmarked_route_ids.include?(route.id),
         thumbnail_url: route.images.attached? ? presigned_url(route.images.first) : nil,
         author: author ? {
           id: author.id,
@@ -339,6 +341,63 @@ class HikeRoutesController < ApiController
     }
   end
 
+  def bookmark
+    hike_route = HikeRoute.find_by(id: params[:id])
+    unless hike_route
+      render json: { status: 404, message: "Ruta nije pronađena" }, status: :not_found
+      return
+    end
+
+    @current_user.route_bookmarks.find_or_create_by!(hike_route: hike_route)
+    render json: { status: 200, message: "Ruta sačuvana", data: { bookmarked: true } }
+  rescue ActiveRecord::RecordNotUnique
+    render json: { status: 200, message: "Ruta već sačuvana", data: { bookmarked: true } }
+  end
+
+  def unbookmark
+    hike_route = HikeRoute.find_by(id: params[:id])
+    unless hike_route
+      render json: { status: 404, message: "Ruta nije pronađena" }, status: :not_found
+      return
+    end
+
+    @current_user.route_bookmarks.where(hike_route: hike_route).destroy_all
+    render json: { status: 200, message: "Ruta uklonjena iz sačuvanih", data: { bookmarked: false } }
+  end
+
+  def saved_routes
+    routes = @current_user.bookmarked_routes
+                          .left_joins(:points)
+                          .includes({ user: { avatar_attachment: :blob } }, images_attachments: :blob)
+                          .select('hike_routes.*, COUNT(points.id) AS points_count')
+                          .group('hike_routes.id')
+                          .order('hike_routes.created_at DESC')
+                          .to_a
+    likes_counts    = likes_counts_for(routes)
+    liked_route_ids = liked_route_ids_for(routes)
+
+    data = routes.map do |route|
+      author = route.user
+      route.as_json.merge(
+        distance: route.distance,
+        duration: route.duration,
+        calculated_from_points: route.points_count >= 2,
+        points_count: route.points_count,
+        likes_count: likes_counts[route.id] || 0,
+        liked_by_current_user: liked_route_ids.include?(route.id),
+        bookmarked_by_current_user: true,
+        thumbnail_url: route.images.attached? ? presigned_url(route.images.first) : nil,
+        author: author ? {
+          id: author.id,
+          name: author.name,
+          avatar_url: author.avatar&.attached? ? avatar_url_for(author) : nil
+        } : nil
+      )
+    end
+
+    render json: { data: data, status: 200, message: "Success" }
+  end
+
   def track_point
     begin
       Rails.logger.info "=== TRACK_POINT DEBUG START ==="
@@ -359,7 +418,7 @@ class HikeRoutesController < ApiController
         
         hike_route = @current_user.hike_routes.create!(
           title: "Nova ruta #{formatted_time}",
-          description: "Automatski kreirana ruta tokom praćenja",
+          description: "",
           difficulty: "medium",
           duration: 0,
           distance: 0,
@@ -593,7 +652,7 @@ class HikeRoutesController < ApiController
 
     hike_route = @current_user.hike_routes.create!(
       title: "Nova ruta #{formatted_time}",
-      description: "Automatski kreirana ruta tokom praćenja",
+      description: "",
       difficulty: "medium",
       duration: 0,
       distance: 0,
@@ -690,6 +749,15 @@ class HikeRoutesController < ApiController
     RouteLike.where(user_id: @current_user.id, hike_route_id: ids).pluck(:hike_route_id).to_set
   end
 
+  def bookmarked_route_ids_for(routes)
+    return Set.new unless @current_user
+
+    ids = routes.map(&:id)
+    return Set.new if ids.empty?
+
+    RouteBookmark.where(user_id: @current_user.id, hike_route_id: ids).pluck(:hike_route_id).to_set
+  end
+
   def like_payload_for(hike_route, liked:)
     {
       id: hike_route.id,
@@ -722,7 +790,7 @@ class HikeRoutesController < ApiController
     formatted_time = user_time.strftime("%d.%m.%Y %H:%M")
     @current_user.hike_routes.create!(
       title: "Nova ruta #{formatted_time}",
-      description: "Automatski kreirana ruta tokom praćenja",
+      description: "",
       difficulty: "medium",
       duration: 0,
       distance: 0,

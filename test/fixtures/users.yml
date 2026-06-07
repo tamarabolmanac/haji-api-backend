@@ -1,0 +1,10 @@
+test_user:
+  name: "Test Planinar"
+  email: "test@hajki.com"
+  password_digest: <%= BCrypt::Password.create("password123") %>
+  role: "user"
+  city: "Beograd"
+  country: "Srbija"
+  email_confirmed_at: <%= Time.current %>
+  total_distance: 0.0
+  total_duration: 0

@@ -20,6 +20,9 @@ Rails.application.routes.draw do
   delete "/routes/:id", to: "hike_routes#destroy"
   post "/routes/:id/like", to: "hike_routes#like"
   delete "/routes/:id/like", to: "hike_routes#unlike"
+  post "/routes/:id/bookmark", to: "hike_routes#bookmark"
+  delete "/routes/:id/bookmark", to: "hike_routes#unbookmark"
+  get "/saved_routes", to: "hike_routes#saved_routes"
 
   # Authentication routes
   post "/auth/register", to: "auth#register"

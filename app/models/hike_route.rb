@@ -3,6 +3,7 @@ class HikeRoute < ApplicationRecord
   has_many_attached :images
   has_many :points, dependent: :delete_all
   has_many :route_likes, dependent: :delete_all
+  has_many :route_bookmarks, dependent: :delete_all
   has_many :liked_by_users, through: :route_likes, source: :user
   
   STATUSES = %w[draft tracking finalized].freeze
