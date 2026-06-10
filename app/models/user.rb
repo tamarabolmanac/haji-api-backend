@@ -15,6 +15,9 @@ class User < ApplicationRecord
   has_many :following, through: :active_follows, source: :followed
   has_many :passive_follows, class_name: "UserFollow", foreign_key: :followed_id, dependent: :destroy
   has_many :followers, through: :passive_follows, source: :follower
+  has_many :blocks_made, class_name: "UserBlock", foreign_key: :blocker_id, dependent: :destroy
+  has_many :blocked_users, through: :blocks_made, source: :blocked
+  has_many :blocks_received, class_name: "UserBlock", foreign_key: :blocked_id, dependent: :destroy
   
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, presence: true, length: { minimum: 6 }, allow_nil: true

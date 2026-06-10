@@ -174,6 +174,29 @@ class UsersController < ApiController
     }, status: :ok
   end
 
+  def block
+    target = User.find(params[:id])
+    if target.id == @current_user.id
+      render json: { message: "Ne možete blokirati sebe." }, status: :unprocessable_entity
+      return
+    end
+
+    @current_user.blocks_made.find_or_create_by!(blocked: target)
+    # Prekini eventualno međusobno praćenje
+    @current_user.unfollow(target) if @current_user.respond_to?(:unfollow)
+    target.unfollow(@current_user) if target.respond_to?(:unfollow)
+
+    render json: { message: "Korisnik je blokiran.", user_id: target.id }, status: :ok
+  rescue ActiveRecord::RecordNotUnique
+    render json: { message: "Korisnik je već blokiran.", user_id: params[:id].to_i }, status: :ok
+  end
+
+  def unblock
+    target = User.find(params[:id])
+    @current_user.blocks_made.where(blocked: target).destroy_all
+    render json: { message: "Korisnik je odblokiran.", user_id: target.id }, status: :ok
+  end
+
   def request_deletion
     unless @current_user.id == params[:id].to_i
       render json: { error: "Nemate dozvolu za ovu akciju." }, status: :forbidden

@@ -37,6 +37,16 @@ Rails.application.routes.draw do
   post "/add_point", to: "points#create"
   post "/users/:id/follow", to: "users#follow"
   delete "/users/:id/unfollow", to: "users#unfollow"
+  post "/users/:id/block", to: "users#block"
+  delete "/users/:id/block", to: "users#unblock"
+  post "/reports", to: "reports#create"
+
+  # Admin moderacija
+  namespace :admin do
+    get "/reports", to: "reports#index"
+    patch "/reports/:id", to: "reports#update"
+    delete "/reports/:id/route", to: "reports#destroy_route"
+  end
   post "/users/:id/request_deletion", to: "users#request_deletion"
   delete "/users/confirm_deletion", to: "users#confirm_deletion"
   

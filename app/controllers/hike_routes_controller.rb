@@ -26,6 +26,11 @@ class HikeRoutesController < ApiController
       scope = scope.where(user_id: followed_ids).or(scope.where(user_id: @current_user.id))
     end
 
+    # Sakrij rute korisnika koje sam blokirao
+    if @current_user && (blocked = @current_user.blocked_users.ids).any?
+      scope = scope.where.not(user_id: blocked)
+    end
+
     total  = scope.except(:select, :group, :order).count("DISTINCT hike_routes.id")
     routes = scope.limit(per_page).offset((page - 1) * per_page).to_a
 
@@ -98,12 +103,17 @@ class HikeRoutesController < ApiController
     @points = Point.near(lat, lng, radius)
     route_ids = @points.pluck(:hike_route_id).uniq
 
-    routes = HikeRoute
+    scope = HikeRoute
       .where(id: route_ids)
       .left_joins(:points)
       .select('hike_routes.*, COUNT(points.id) AS points_count')
       .group('hike_routes.id')
-      .to_a
+
+    if @current_user && (blocked = @current_user.blocked_users.ids).any?
+      scope = scope.where.not(user_id: blocked)
+    end
+
+    routes = scope.to_a
     likes_counts = likes_counts_for(routes)
     liked_route_ids = liked_route_ids_for(routes)
 

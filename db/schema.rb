@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_06_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_06_09_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "cube"
   enable_extension "earthdistance"
@@ -97,6 +97,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_06_120000) do
     t.string "correct_option"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "reports", force: :cascade do |t|
+    t.bigint "reporter_id", null: false
+    t.bigint "hike_route_id"
+    t.bigint "reported_user_id"
+    t.string "reason", null: false
+    t.text "details"
+    t.string "status", default: "pending", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["hike_route_id"], name: "index_reports_on_hike_route_id"
+    t.index ["reported_user_id"], name: "index_reports_on_reported_user_id"
+    t.index ["reporter_id"], name: "index_reports_on_reporter_id"
+    t.index ["status"], name: "index_reports_on_status"
   end
 
   create_table "route_bookmarks", force: :cascade do |t|
@@ -240,6 +255,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_06_120000) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "user_blocks", force: :cascade do |t|
+    t.bigint "blocker_id", null: false
+    t.bigint "blocked_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["blocked_id"], name: "index_user_blocks_on_blocked_id"
+    t.index ["blocker_id", "blocked_id"], name: "index_user_blocks_on_blocker_id_and_blocked_id", unique: true
+    t.index ["blocker_id"], name: "index_user_blocks_on_blocker_id"
+  end
+
   create_table "user_follows", force: :cascade do |t|
     t.bigint "follower_id", null: false
     t.bigint "followed_id", null: false
@@ -271,6 +296,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_06_120000) do
   add_foreign_key "hike_routes", "users"
   add_foreign_key "points", "hike_routes"
   add_foreign_key "points", "users"
+  add_foreign_key "reports", "hike_routes"
+  add_foreign_key "reports", "users", column: "reported_user_id"
+  add_foreign_key "reports", "users", column: "reporter_id"
   add_foreign_key "route_bookmarks", "hike_routes"
   add_foreign_key "route_bookmarks", "users"
   add_foreign_key "route_likes", "hike_routes"
@@ -281,6 +309,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_06_120000) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "user_blocks", "users", column: "blocked_id"
+  add_foreign_key "user_blocks", "users", column: "blocker_id"
   add_foreign_key "user_follows", "users", column: "followed_id"
   add_foreign_key "user_follows", "users", column: "follower_id"
 end
