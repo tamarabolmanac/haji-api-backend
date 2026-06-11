@@ -10,42 +10,42 @@
   {
     "name": "Fruška Gora",
     "type": "national_park",
-    "lat": 45.1500,
-    "lon": 19.7000,
+    "lat": 45.15,
+    "lon": 19.7,
     "description": "Nacionalni park Fruška gora zauzima najveći deo istoimene ostrvske planine u severnom delu Srema. Izdužena u pravcu istok zapad u dužini od 78 km sa severa je ograničena rekom Dunav na čiji današnji tok je značajno uticala, dok se prema jugu spušta u Sremsku lesnu zaravan.\n\nFruška gora uz ostale ostrvske planine predstavlja ostatke spuštenog dela unutrašnjih Dinarida. Nastala je u paleozoiku za vreme hercinske orogneneze dok je konačno formirana kao zaostali deo starog panonskog kopna pri njegovom spuštanju u oligomiocenu. Najznačajniji rasedi koji su nastali razlamanjem planiskog masiva tokom alpske orogeneze su: Vrdnički, Novo Hopovo, Međeš, Grgeteški, Novoselski i Čotski. Složenog je geološkog sastava. Jezgro planine je izgrađeno od paleozojskih škriljaca, filita, argilošista sa interkalacijama kvarca i kvarc – konglomerata. Na osnovu se nastavljaju mezozojske stene predstavljene verfenskim škriljcima, serpentinima sa mestimičnom pojavom kretacejskih krečnjaka. Ceo trup planine je proriven magmatskim žicama granita, riolita, dacita i andezita sa tufovima.\n\nNa području Fruške gore nalazi se veći broja ležišta različitih mineralnih resursa, prvenstveno nemetala i uglja. Razlog tome je složena geološka istorija koja se ogledala u formiranju različitih slojeva stena tokom višestrukih tektonskih razlamanja i više puta obnavljanim vulkanskim aktivnostima. Dok se ugalj više ne eksploatiše nemetali su jedine sirovnie koje se eksploatišu na ovom prostoru. Nemetalične mineralne sirovine su relativno brojne i raznovrsne i obuhvataju: cementne laporce, krečnjake, dolomite, peščare, latite (trahite), dacitsko-andezitske stene, neolitske i druge tufove, bentonite, opekarske gline, magnezite, peskove, juvelirske sirovine, azbest, silikovani serpentinit.\n\nTokom postojanja Paratetisa Fruška gora je bila ostrvo. U postjezerskoj fazi Fruška gora je predstavljala prepreku vetrovima koji su duvali sa Karpata zbog čega je oko planine taložena fina prašina – les. Na Fruškoj gori se les nalazi do visine od 400 m. Zbog pravca navejavanja lesa sa severoistoka i istoka južne padine Fruške gore se blago spuštaju prema niziji dok su severne strmije, a lesni odseci prema Dunavu su visoki. Kod Čortanovaca su lesni odseci visoki i do 60 m. Zaravan je stvarana tokom 5-6 faza jer se na profilu zaravni zapaža 4-5 smeđih zona. Les je navejavan za vreme sušnijih glacijalnih perioda dok su smeđe zone nastale tokom vlažnijih perioda, interglacijala i interstadijala.",
     "image": "/img/NP_fruska_gora.jpg"
   },
   {
     "name": "Kopaonik",
     "type": "national_park",
-    "lat": 43.2920,
-    "lon": 20.8120,
+    "lat": 43.292,
+    "lon": 20.812,
     "description": "Nacionalni park Kopaonik se nalazi u centralnom delu Republike Srbije. Zbog svojih prirodnih vrednosti, 1981. godine Kopaonik je proglašen za nacionalni park. Nacionalni park Kopaonik obuhvata površinu od 11.810 hektara i po broju endemičnih vrsta predstavlja jedan od najznačajnijih centara biodiverziteta endemične flore Srbije.\n\nKopaonik se nalazi između reka Ibra i Sitnice na zapadu, Laba na jugoistoku, Jošanice i Kozničke reke na severu dok je istočna strana omeđena dolinom reke Rasine i Toplice.\n\nDuboke kotline i klisure Kopaonika urezale su Barska i Lisinska reka na zapadnoj strani, Duboka i Brzećka reka na istočnoj strani, a Ciganska i Gobeljska reka na severnoj strani. I zajedno sa Samokovskom rekom, centralnom kopaoničkom vodenom arterijom, utiču na rasprostranjenje biljnog i životinjskog sveta i obeležavaju Kopaonik.\n\nKopaonik karakteriše raznovrsna geološka građa sa stenama različitog nastanka i starosti (serpentiniti, graniti, škriljci, mermeri, andeziti, krečnjaci). Danas oblike reljefa Kopaonika stvorili su, kroz dugi niz godina, procesi erozije i spiranja.\n\nKlima Kopaonika obeležena je sa preko 200 sunčanih dana godišnje zbog čega i nosi naziv „planina sunca„. Kopaonik se nalazi na prelazu primorske ka kontinentalnoj klimi. Hladni i teži vazduh zadržava se u okolnim dolinama tako da zimske temperature nisu mnogo niske. Srednja godišnja temperatura Ravnog Kopaonika je 3,7 °C. Snegovi sa izvesnim odstupanjima padaju krajem novembra i traju do meseca maja, prosečno 180–230 dana godišnje. Padavine su u proseku veće od 1000 mm godišnje.\n\nRudna bogatstva podarila su ime Kopaoniku, gde se od najstarijih vremena kopala ruda. Vulkanska aktivnost i vreli mineralni rastopi uzrokovali su promene na stenama usled visokih temperatura i snažnih pritisaka. Tako je nastala „kopaonička rudna oblast“ sa velikim brojem rudnika u kojima se mogu naći rude gvožđa, olova, cinka, srebra i zlata, kao i retki minerali: volastonit, fluorit i azbest.\n\nNajpoznatiji izvori na Kopaoniku su: Marine vode, Krčmar voda, Pajino preslo, Javor česma, Kaznovske bačije.\n\nNa području Kopaonika nalazi se nekoliko urvinskih jezera. Najveće je Semeteško jezero na 900 mnv, kružnog oblika i prečnika 60 m. Vodu dobija od podvodnih izvora koji su toliko duboki da je jezeru praktično nemoguće izmeriti dubinu. Prosečna temperatura vode je 10 °C, a u julu i avgustu dostiže 20 °C. Na jezeru su se formirala tzv. „ploveća ostrva“ na kojima ima rastinja — atrakcija za posetioce. Jugozapadno od Jošaničke banje nalaze se još dva urvinska jezera: Gornje (Dugačko) i Donje (Malo) jezero.",
     "image": "/img/NP_kopaonik.png"
   },
   {
     "name": "Tara",
     "type": "national_park",
-    "lat": 43.9000,
-    "lon": 19.5000,
-    "description": "",
-    "image": null
+    "lat": 43.9,
+    "lon": 19.5,
+    "description": "Masiv planine Tare nalazi se u zapadnoj Srbiji, u severozapadnom delu oivičen dubokim kanjonom reke Drine, dok mu se ogranci spuštaju ka kremanskoj dolini i dolini reke Đetinje, gde se oslanja na ogranke Zlatibora. Područje planine Tare sačinjava najzapadniju skupinu iz grupe Starovlaško-raških planina i, u širem smislu, sastoji se od tri podeone celine, donekle izdvojene rečnim dolinama, prevojima ili sedlima.\n\nTara u užem smislu ili Ravna Tara deo je masiva sa Kaluđerskim barama i krečnjačkom visoravni između sledećih reka: Drina, Rača, Konjska reka, Beli Rzav i Derventa (vrh Zborište 1.544 m). Crni vrh se nalazi između suve granice Srbije i Bosne te između sela Zaovine i Rastište. U vezi je sa Ravnom Tarom na prevoju Čemerište, a sa Zvijezdom na sedlu Predov Krst (vrh Kozji rid 1.591 m). Zvijezda se nalazi u trouglu između sela Rastište i Jagoštica i kanjonskog dela Drine (vrh Veliki kraj 1.347 m). Sa ovim delovima jedinstveno fizičko-geografsko područje sačinjava i Veliki Stolac (1.673 m) koji je u Bosni i istovremeno najviši vrh čitavog područja.\n\nNa osnovu dugogodišnjih proučavanja i istraživanja ovog područja, a radi zaštite izuzetnih prirodnih vrednosti koje ono poseduje Skupština Srbije je 1981. posebnim Zakonom područje Tare proglasila za Nacionalni park.\n\nPlanina Tara je poznato i tradicionalno letnje i zimsko rekreativno područje. Povoljni klimatski uslovi, veliki broj sunčanih dana, srednja visina oko 1000 metra nadmorske visine. Ispod severnih padina Tare leži varošica Bajina Bašta.\n\nPlaninu Taru su proučavali mnogi naučnici. Prvi je bio Josif Pančić, koji je na ovoj planini 1875. otkrio endemsku vrstu četinara, nazvanu Pančićeva omorika. Poznati planinar Dr Kuno Vidrić, koji je prepešačio skoro sve važnije planine Evrope, najviše je vremena proveo na Tari obeležavajući planinarske staze i prikupljajući građu za više knjiga o ovoj prelepoj planini.\n\nU 1934. je završen sanatorijum namenjen tuberkuloznoj deci. Podigao ga je Centralni higijenski zavod, prve beogradske srednjoškolce je primio u julu 1935.",
+    "image": "/img/NP_tara.png"
   },
   {
     "name": "Šar-planina",
     "type": "national_park",
     "lat": 42.1667,
-    "lon": 21.0000,
-    "description": "",
-    "image": null
+    "lon": 21.0,
+    "description": "Nacionalni park Šar-planina se nalazi na delovima opština Štrpce, Prizren, Suva Reka i Kačanik na Kosovu i Metohiji.\n\nOsnovan je 1986. godine i površina nacionalnog parka je 22.805 ha. Nacionalni park je osnovan radi očuvanja: različitih oblika glacijalnog (cirkovi, morene glacijalna jezera i dr.), periglacijalnog (snežanički cirkovi, klizeći blokovi, mikrooblici tundra mozaika sa drobinama i dr.), kraškog i fluvijalnog reljefa; hidroloških objekata i pojava (rečni tokovi, izvori, potoci, tresave i jezera); šumskih i visokoplaninskih vegetacija i njihovih staništa (zajednice munike, molike, krivulja, tresave i visoke zeleni i dr.); staništa i populacije divlje flore (hajdučica kralja Aleksandra, Nikolićev pucavac, bornmilera, šarplaninski karanfil i dr.) i faune, posebno bogate faune dnevnih leptira, ptica (sivi soko, veliki tetreb, jarebica kamenjarka, prdavac, balkanska ušata ševa), sisara (snežna i dinarska voluharica, mrki medved, vuk, divokoza i dr.); predela sa nizom karakterističnih obeležja; brojnih objekata kulturne baštine koji potiču iz srednjovekovne srpske države (manastiri Sv. Arhanđela, Sv. Petra Koriškog, Sv. Bogorodice i crkve Sv. Nikole, Sv. Petke, Sv. Đorđa i dr.) i zaštite i očuvanja spomen obeležja.\n\n„Rusenica\" predstavlja pribežište retke i ugrožene divljači u našoj zemlji – risa i zaštićen je kao poseban rezervat 1950. godine. „Popovo prase\" je rezervat čiste sastojine endemičnog bora munike i zaštićen je 1960. godine. Stabla munike su niska, često sa gornje strane oštećena, podmladak vrlo redak, skoro bez ikakve druge prizemne vegetacije. „Ošljak\" je rezervat čiste sastojine endemičnog bora munike u donjem delu, a stene i kamenjari bliže vrhu Ošljaka. Kako je taj deo Ošljaka eksponiran više zapadu, to se u proleće u njemu okupljaju veliki tetrebovi a rezervat naseljavaju i jarebice, kamenjarke i leštarke. Kao poseban rezervat zaštićen je 1960. godine. „Golem bor\" je potpuno čista munikova sastojina i kao poseban rezervat zaštićen je 1960. godine.\n\nŠar-planina, koja se kao moćna barijera izdiže iznad kosovsko-metohijske kotline, je visoka i markantna planina sa oko 70 vrhova visine preko 2.000 m i sa preko 30 vrhova iznad 2.500 m (najviši vrh je Titov vrh u Makedoniji sa 2.747 m).\n\nNa Šar-planini živi 1.800 biljnih vrsta. Među njima, 175 je strogo zaštićenih i 268 zaštićenih. U Crvenoj knjizi flore Srbije su 24 vrste, na spisku Evropske crvene liste ugroženih životinjskih i biljnih vrsta je 25 vrsta, i na spisku Svetske crvene liste ugroženih biljaka je 31 vrsta.\n\nIstovremeno, Šar-planina pa i sam Nacionalni park, predstavlja jedno od faunistički najbogatijih područja Srbije i Evrope. U Nacionalnom parku živi 147 vrsta dnevnih leptira (50,86% balkanske faune dnevnih leptira i 77% vrsta Srbije), 31 vrsta vodozemaca i gmizavaca (ili 69% srpske herpetofaune), 159 vrsta ptica (a sreće se i preko 200 vrsta), i 32 vrste sisara, od toga 30 vrsta globalno ugroženih i 17 vrsta koje su prirodne retkosti.",
+    "image": "/img/NP_sar_planina.png"
   },
   {
     "name": "Stara Planina",
     "type": "nature_park",
-    "lat": 43.3500,
-    "lon": 22.6000,
-    "description": "",
-    "image": null
+    "lat": 43.35,
+    "lon": 22.6,
+    "description": "Stara planina jeste planinski lanac koji pripada Balkanskim planinama (deo Karpatsko-balkanskih planina), a nalazi se pretežno u Bugarskoj i znatno manjim delom u jugoistočnoj Srbiji. Dužina ovog planinskog sistema iznosi 530 km. Pruža se od Vrške čuke sa srpsko-bugarske granice na zapadu sve do rta Emine kod Crnog mora na istoku. Najviša tačka Stare planine je vrh Botev (2.375 m) u Bugarskoj. U Srbiji, najviši vrh je Midžor sa 2.169 m nmv što ga čini najvišom tačkom uže Srbije.\n\nStara planina je najviša i najrasprostranjenija Karpatsko-balkanska planina. Na njenom prostoru nalaze se parkovi prirode, prirodni rezervati i zaštićena područja kao i bugarski nacionalni park Centralni Balkan. Zbog velikog broja planinarskih objekata, izletišta kao i zbog prisustva karakterističnog biljnog i životinjskog sveta, Stara planina privlači veliki broj turista.\n\nU vreme Rimljana, masiv se zvao Hemus (Haemus). Istoričari smatraju da taj naziv potiče od tračke reči saimon što znači „planinski lanac\". Sloveni su je nazivali Matorni gori, a Turci Kodža Balkan ili samo Balkan. Naziv Balkan je persijskog porekla i znači „brdoviti kraj\".\n\nOva planina predstavlja deo prostranog planinskog sistema koji se naziva Karpatsko-balkanski planinski sistem. U Srbiji se nalazi samo njegov manji zapadni deo. Celu teritoriju Stare planine i njeno podgorje sastavlja Torlak a istočna polovina se naziva Visok. Kao morfološka celina omeđena je dolinama Belog i Trgoviškog Timoka, i Visočice, a na istoku je omeđena državnom granicom Srbije i Bugarske. U meridijanskom pravcu se pruža skoro 100 km, dok u uporedničkom pravcu pružanja maksimalna dužina iznosi oko 30 km (Pirotska kotlina—Srebrna glava).\n\nNa severu, masiv Stare planine počinje od obronaka Vrške čuke (692 m nmv).\n\nDeo Stare planine u Srbiji regionalno pripada istočnoj Srbiji i administrativno se prostire na teritorijama četiri opštine: Zaječar, Knjaževac, Pirot i Dimitrovgrad. Planinski masiv Stare planine sastoji se iz Zaglavka i Visoka, u kojima dominiraju Trgoviški i Beli Timok, odnosno Visočica i Toplodolska reka.\n\nNajviša tačka Stare planine u Srbiji je vrh Midžor sa visinom od 2.169 m nmv, a najniža tačka je na izlazu iz doline Prlitskog potoka (132 m nmv).",
+    "image": "/img/NP_stara_planina.png"
   },
   {
     "name": "Zlatibor",
@@ -58,7 +58,7 @@
   {
     "name": "Golija",
     "type": "nature_park",
-    "lat": 43.3500,
+    "lat": 43.35,
     "lon": 20.2333,
     "description": "",
     "image": null
@@ -74,7 +74,7 @@
   {
     "name": "Zasavica",
     "type": "nature_park",
-    "lat": 44.8000,
+    "lat": 44.8,
     "lon": 19.3333,
     "description": "",
     "image": null
@@ -82,15 +82,15 @@
   {
     "name": "Ludaš",
     "type": "nature_park",
-    "lat": 46.0700,
-    "lon": 19.8200,
+    "lat": 46.07,
+    "lon": 19.82,
     "description": "",
     "image": null
   },
   {
     "name": "Palić",
     "type": "nature_park",
-    "lat": 46.1000,
+    "lat": 46.1,
     "lon": 19.7667,
     "description": "",
     "image": null
@@ -98,7 +98,7 @@
   {
     "name": "Grza",
     "type": "nature_park",
-    "lat": 43.8000,
+    "lat": 43.8,
     "lon": 21.8833,
     "description": "",
     "image": null
@@ -107,15 +107,15 @@
     "name": "Radan",
     "type": "nature_park",
     "lat": 42.9833,
-    "lon": 21.8000,
+    "lon": 21.8,
     "description": "",
     "image": null
   },
   {
     "name": "Vlasina",
     "type": "nature_park",
-    "lat": 42.7000,
-    "lon": 22.3500,
+    "lat": 42.7,
+    "lon": 22.35,
     "description": "",
     "image": null
   },
@@ -130,8 +130,8 @@
   {
     "name": "Ozren-Devica",
     "type": "nature_park",
-    "lat": 43.5500,
-    "lon": 21.9500,
+    "lat": 43.55,
+    "lon": 21.95,
     "description": "",
     "image": null
   },
@@ -139,7 +139,7 @@
     "name": "Kanjon reke Trešnjice",
     "type": "nature_park",
     "lat": 44.0167,
-    "lon": 19.3000,
+    "lon": 19.3,
     "description": "",
     "image": null
   },
@@ -147,7 +147,7 @@
     "name": "Rtanj",
     "type": "mountain",
     "lat": 43.7833,
-    "lon": 21.9000,
+    "lon": 21.9,
     "description": "",
     "image": null
   },
@@ -170,7 +170,7 @@
   {
     "name": "Suva Planina",
     "type": "mountain",
-    "lat": 43.2000,
+    "lat": 43.2,
     "lon": 22.1167,
     "description": "",
     "image": null
@@ -194,15 +194,15 @@
   {
     "name": "Kučaj",
     "type": "mountain",
-    "lat": 43.9500,
-    "lon": 21.9500,
+    "lat": 43.95,
+    "lon": 21.95,
     "description": "",
     "image": null
   },
   {
     "name": "Povlen",
     "type": "mountain",
-    "lat": 44.1000,
+    "lat": 44.1,
     "lon": 19.7333,
     "description": "",
     "image": null
@@ -234,15 +234,15 @@
   {
     "name": "Goč",
     "type": "mountain",
-    "lat": 43.6000,
-    "lon": 20.9500,
+    "lat": 43.6,
+    "lon": 20.95,
     "description": "",
     "image": null
   },
   {
     "name": "Ozren (Sokobanja)",
     "type": "mountain",
-    "lat": 43.6500,
+    "lat": 43.65,
     "lon": 21.8833,
     "description": "",
     "image": null

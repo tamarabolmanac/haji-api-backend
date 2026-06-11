@@ -1,7 +1,11 @@
 Rails.application.routes.draw do
   get '/health', to: 'health#check'
   get '/osm_routes', to: 'osm_routes#index'
-  get '/protected_areas', to: 'protected_areas#index'
+  get    '/protected_areas',     to: 'protected_areas#index'
+  get    '/protected_areas/:id', to: 'protected_areas#show'
+  post   '/protected_areas',     to: 'protected_areas#create'
+  patch  '/protected_areas/:id', to: 'protected_areas#update'
+  delete '/protected_areas/:id', to: 'protected_areas#destroy'
   post '/recommendations', to: 'recommendations#create'
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
