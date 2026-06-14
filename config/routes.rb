@@ -45,6 +45,10 @@ Rails.application.routes.draw do
   delete "/users/:id/block", to: "users#unblock"
   post "/reports", to: "reports#create"
 
+  # App settings / feature flags
+  get "/settings", to: "settings#index"
+  patch "/admin/settings", to: "settings#update"
+
   # Admin moderacija
   namespace :admin do
     get "/reports", to: "reports#index"
