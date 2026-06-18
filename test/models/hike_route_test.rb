@@ -1,6 +1,29 @@
 require "test_helper"
 
 class HikeRouteTest < ActiveSupport::TestCase
+  test "new_route_for_user kreira rutu u statusu tracking" do
+    user = users(:test_user)
+    route = HikeRoute.new_route_for_user(user, "18.06.2026 10:00")
+
+    assert route.persisted?
+    assert_equal "tracking", route.status
+    assert_equal user.id, route.user_id
+    assert_includes route.title, "18.06.2026 10:00"
+
+    route.destroy
+  end
+
+  test "new_route_for_user postavlja podrazumevane vrednosti distance i duration na 0" do
+    user = users(:test_user)
+    route = HikeRoute.new_route_for_user(user, "18.06.2026 10:00")
+
+    assert_equal 0, route.distance
+    assert_equal 0, route.duration
+
+    route.destroy
+  end
+
+
   test "brisanje rute briše sve njene tačke" do
     route = hike_routes(:test_route)
 

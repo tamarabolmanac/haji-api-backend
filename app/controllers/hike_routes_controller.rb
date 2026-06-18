@@ -131,59 +131,6 @@ class HikeRoutesController < ApiController
     render json: { data: nearby_routes, status: 200, message: "Success" }
   end
 
-  # Nearby lookup using overpass_routes_dsl gem.
-  # Expects lat, lon, radius (km), mode, country.
-  def nearby_overpass
-    lat = Float(params[:lat])
-    lon = Float(params[:lon])
-    radius_km = Float(params[:radius])
-    radius_m = (radius_km * 1000).round
-    mode = params[:mode].to_s.presence || "peaks"
-    country = params[:country].to_s.presence || "Serbia"
-
-    supported_modes = %w[peaks hiking_paths hiking_routes bike]
-    unless supported_modes.include?(mode)
-      render json: { status: 400, message: "Unsupported mode. Allowed: #{supported_modes.join(', ')}" }, status: :bad_request
-      return
-    end
-
-    query = OverpassRoutesDsl.build do
-      country country
-      mode mode.to_sym
-      around lat, lon, radius_m: radius_m
-    end
-
-    client = OverpassRoutesDsl::Client.new
-    result = client.execute(query)
-
-    Rails.logger.info("[NearbyOverpass] params=#{{
-      lat: lat,
-      lon: lon,
-      radius_km: radius_km,
-      radius_m: radius_m,
-      mode: mode,
-      country: country
-    }.to_json}")
-    Rails.logger.info("[NearbyOverpass] result_elements=#{result.fetch('elements', []).size}")
-
-    render json: {
-      status: 200,
-      message: "Success",
-      query: query,
-      data: result
-    }
-  rescue ArgumentError, TypeError
-    render json: { status: 400, message: "Invalid parameters (lat, lon, radius are required numeric values)." }, status: :bad_request
-  rescue OverpassRoutesDsl::ValidationError => e
-    render json: { status: 422, message: e.message }, status: :unprocessable_entity
-  rescue OverpassRoutesDsl::Error => e
-    Rails.logger.error("[NearbyOverpass] Overpass error: #{e.message}")
-    render json: { status: 502, message: "Overpass request failed" }, status: :bad_gateway
-  rescue StandardError => e
-    Rails.logger.error("[NearbyOverpass] Unexpected error: #{e.class} #{e.message}\n#{e.backtrace&.first(8)&.join("\n")}")
-    render json: { status: 500, message: "Internal server error" }, status: :internal_server_error
-  end
-
   def create
     @hike_route = @current_user.hike_routes.build(hike_params.except(:images))
   
@@ -410,36 +357,17 @@ class HikeRoutesController < ApiController
 
   def track_point
     begin
-      Rails.logger.info "=== TRACK_POINT DEBUG START ==="
-      Rails.logger.info "User ID: #{@current_user.id}"
-      Rails.logger.info "Received params: #{params.to_unsafe_h}"
-      Rails.logger.info "Route ID param: #{params[:route_id]} (type: #{params[:route_id].class})"
-      Rails.logger.info "Latitude: #{params[:latitude]}"
-      Rails.logger.info "Longitude: #{params[:longitude]}"
-      Rails.logger.info "Timestamp: #{params[:timestamp]}"
-      Rails.logger.info "Request time: #{Time.current}"
-      
       if params[:route_id].nil? || params[:route_id] == "null"
-        Rails.logger.info "Creating NEW route (route_id is nil or null)"
-        
         # Use timestamp from browser (user's local time)
         user_time = params[:timestamp].present? ? Time.parse(params[:timestamp]) : Time.current
         formatted_time = user_time.strftime('%d.%m.%Y %H:%M')
         
-        hike_route = @current_user.hike_routes.create!(
-          title: "Nova ruta #{formatted_time}",
-          description: "",
-          difficulty: "medium",
-          duration: 0,
-          distance: 0,
-          status: "tracking"
-        )
-        Rails.logger.info "✅ Created new route with ID: #{hike_route.id}, time: #{formatted_time}"
+        hike_route = HikeRoute.new_route_for_user(@current_user, formatted_time)
       else
         Rails.logger.info "Using EXISTING route ID: #{params[:route_id]}"
         hike_route = HikeRoute.find(params[:route_id])
-        Rails.logger.info "✅ Found existing route: #{hike_route.id}, title: #{hike_route.title}"
 
+        # TODO - move to interceptor
         if hike_route.user_id != @current_user.id
           Rails.logger.error "❌ User #{@current_user.id} trying to edit route #{hike_route.id} owned by #{hike_route.user_id}"
           render json: { status: 403, message: "You cannot edit route from another user" }
@@ -447,32 +375,11 @@ class HikeRoutesController < ApiController
         end
       end
 
-      # Parse timestamp properly with timezone
-      parsed_timestamp = if params[:timestamp].present?
-        begin
-          # Check if it's a Unix timestamp (number)
-          if params[:timestamp].to_s.match?(/^\d+$/)
-            Time.zone.at(params[:timestamp].to_i)
-          else
-            # Try to parse as ISO string
-            Time.zone.parse(params[:timestamp])
-          end
-        rescue ArgumentError => e
-          Rails.logger.warn "Invalid timestamp format: #{params[:timestamp]}, error: #{e.message}, using current time"
-          Time.current
-        end
-      else
-        Time.current
-      end
-
-      Rails.logger.info "Building point for route #{hike_route.id}"
-      Rails.logger.info "Point data: lat=#{params[:latitude]}, lng=#{params[:longitude]}, timestamp=#{parsed_timestamp}"
-      
       point = hike_route.points.build(
         lat: params[:latitude],
         lng: params[:longitude],
         # accuracy: params[:accuracy],  # TODO: Add after migration
-        timestamp: parsed_timestamp
+        timestamp: parse_point_timestamp(params[:timestamp])
         # user: @current_user  # TODO: Add after migration (currently nil)
       )
 
@@ -483,19 +390,7 @@ class HikeRoutesController < ApiController
         Rails.cache.delete("hike:#{hike_route.id}")
         Rails.logger.info "Cache invalidated for route #{hike_route.id}"
         
-        if hike_route.points.count >= 2
-          old_distance = hike_route.distance
-          old_duration = hike_route.duration
-          new_distance = hike_route.calculated_distance
-          new_duration = hike_route.calculated_duration
-          
-          Rails.logger.info "Updating route calculations: distance #{old_distance} → #{new_distance}, duration #{old_duration} → #{new_duration}"
-          
-          hike_route.update_columns(
-            distance: new_distance,
-            duration: new_duration
-          )
-        end
+        # Distanca/trajanje se NE računaju ovde — kalkulacija se radi jednom, pri finalizaciji rute.
         
         Rails.logger.info "✅ Sending successful response for route #{hike_route.id}, point #{point.id}"
         Rails.logger.info "=== TRACK_POINT DEBUG END (SUCCESS) ==="
@@ -578,7 +473,7 @@ class HikeRoutesController < ApiController
     skipped_duplicate = 0
 
     ActiveRecord::Base.transaction do
-      hike_route ||= create_tracking_route_for_bulk!(first_ts)
+      hike_route ||= create_tracking_route!(first_ts)
 
       seen_uuids = Set.new
 
@@ -622,12 +517,7 @@ class HikeRoutesController < ApiController
 
       Rails.cache.delete("hike:#{hike_route.id}")
 
-      if hike_route.points.count >= 2
-        hike_route.update_columns(
-          distance: hike_route.calculated_distance,
-          duration: hike_route.calculated_duration
-        )
-      end
+      # Distanca/trajanje se NE računaju ovde — kalkulacija se radi jednom, pri finalizaciji rute.
     end
 
     hike_route.reload
@@ -660,14 +550,7 @@ class HikeRoutesController < ApiController
     user_time = Time.current
     formatted_time = user_time.strftime('%d.%m.%Y %H:%M')
 
-    hike_route = @current_user.hike_routes.create!(
-      title: "Nova ruta #{formatted_time}",
-      description: "",
-      difficulty: "medium",
-      duration: 0,
-      distance: 0,
-      status: "tracking"
-    )
+    hike_route = HikeRoute.new_route_for_user(@current_user, formatted_time)
 
     render json: {
       status: 200,
@@ -709,28 +592,10 @@ class HikeRoutesController < ApiController
       return
     end
 
-    if route.points.count >= 2
-      # Izračunaj distancu/vreme iz tačaka i označi kao finalized
-      if route.finalize_route!
-        render json: { 
-          status: 200, 
-          message: "Route finalized successfully",
-          data: {
-            id: route.id,
-            distance: route.distance,
-            duration: route.duration,
-            points_count: route.points.count
-          }
-        }
-      else
-        render json: { status: 400, message: "Cannot finalize route" }
-      end
-    else
-      # Premalo tačaka za proračun, ali svejedno je zaključavamo – bez opcije nastavka
-      route.update_column(:status, "finalized")
+    if route.finalize_route!
       render json: {
         status: 200,
-        message: "Route finalized without GPS stats (premalo tačaka)",
+        message: "Route finalized successfully",
         data: {
           id: route.id,
           distance: route.distance,
@@ -738,6 +603,8 @@ class HikeRoutesController < ApiController
           points_count: route.points.count
         }
       }
+    else
+      render json: { status: 500, message: "Failed to finalize route" }
     end
   end
   
@@ -795,17 +662,11 @@ class HikeRoutesController < ApiController
     end
   end
 
-  def create_tracking_route_for_bulk!(first_timestamp)
+  def create_tracking_route!(first_timestamp)
     user_time = first_timestamp.present? ? parse_point_timestamp(first_timestamp) : Time.current
     formatted_time = user_time.strftime("%d.%m.%Y %H:%M")
-    @current_user.hike_routes.create!(
-      title: "Nova ruta #{formatted_time}",
-      description: "",
-      difficulty: "medium",
-      duration: 0,
-      distance: 0,
-      status: "tracking"
-    )
+    
+    HikeRoute.new_route_for_user(@current_user, formatted_time)
   end
 
   def hike_params

@@ -71,22 +71,29 @@ class HikeRoute < ApplicationRecord
     end
   end
   
-  # Finalize route calculations when tracking is stopped
+  # Zaključava rutu kao finalized. Ako ima >= 2 tačke, usput izračuna
+  # distance/duration iz tačaka; u suprotnom samo postavi status.
   def finalize_route!
     if points.count >= 2
-      calculated_distance = self.calculated_distance
-      calculated_duration = self.calculated_duration
-      
       update_columns(
         distance: calculated_distance,
         duration: calculated_duration,
         status: "finalized"
       )
-      
-      true
     else
-      false
+      update_column(:status, "finalized")
     end
+  end
+
+  def self.new_route_for_user(user, formatted_time)
+    user.hike_routes.create!(
+      title: "Nova ruta #{formatted_time}",
+      description: "",
+      difficulty: "medium",
+      duration: 0,
+      distance: 0,
+      status: "tracking"
+    )
   end
   
   private

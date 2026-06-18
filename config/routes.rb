@@ -17,7 +17,6 @@ Rails.application.routes.draw do
   get "/routes/:id", to: "hike_routes#show"
   get "/my_routes", to: "hike_routes#my_routes"
   get "/nearby", to: "hike_routes#nearby"
-  post "/nearby/overpass", to: "hike_routes#nearby_overpass"
   post "/new_route", to: "hike_routes#create"
   post "/routes/:id/update", to: "hike_routes#update"
   put "/routes/:id", to: "hike_routes#update"
