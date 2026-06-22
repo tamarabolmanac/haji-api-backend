@@ -60,7 +60,10 @@ class ElevationService
   def fetch(locations)
     uri = URI("#{BASE_URL}/v1/#{DATASET}")
     uri.query = URI.encode_www_form(locations: locations)
-    res = Net::HTTP.start(uri.host, uri.port, open_timeout: 5, read_timeout: 15) do |http|
+    # use_ssl must be on for https (e.g. the public api.opentopodata.org);
+    # self-hosted runs over plain http on :5000.
+    res = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https",
+                          open_timeout: 5, read_timeout: 15) do |http|
       http.get(uri.request_uri)
     end
     return nil unless res.is_a?(Net::HTTPSuccess)
