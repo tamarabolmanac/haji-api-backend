@@ -191,6 +191,20 @@ class HikeRoutesController < ApiController
     end
   end
 
+  # GET /routes/:id/elevation
+  # Returns the elevation profile (lat/lng/elevation/cumulative distance) for a
+  # route's GPS track. Cached, since elevations are persisted per point.
+  def elevation
+    hike = HikeRoute.includes(:points).find_by(id: params[:id])
+    return render(json: { status: 404, message: "Route not found" }, status: :not_found) unless hike
+
+    profile = Rails.cache.fetch("hike:#{hike.id}:elevation", expires_in: 1.hour) do
+      ElevationService.new(hike).profile
+    end
+
+    render json: { data: profile, status: 200, message: "Success" }
+  end
+
   def update
     hike_route = @current_user.hike_routes.find_by(id: params[:id])
     
@@ -593,6 +607,10 @@ class HikeRoutesController < ApiController
     end
 
     if route.finalize_route!
+      # Pre-compute the elevation profile in the background so the route detail
+      # opens instantly (no on-demand OpenTopoData wait for the first viewer).
+      ElevationJob.perform_later(route.id)
+
       render json: {
         status: 200,
         message: "Route finalized successfully",

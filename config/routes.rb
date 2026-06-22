@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   
   get "/routes", to: "hike_routes#index"
   get "/routes/:id", to: "hike_routes#show"
+  get "/routes/:id/elevation", to: "hike_routes#elevation"
   get "/my_routes", to: "hike_routes#my_routes"
   get "/nearby", to: "hike_routes#nearby"
   post "/new_route", to: "hike_routes#create"
