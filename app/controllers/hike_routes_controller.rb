@@ -184,6 +184,8 @@ class HikeRoutesController < ApiController
       payload = payload.deep_dup
       payload[:data][:likes_count] = hike.route_likes.count
       payload[:data][:liked_by_current_user] = @current_user ? hike.route_likes.exists?(user_id: @current_user.id) : false
+      payload[:data][:bookmarked_by_current_user] = @current_user ? @current_user.route_bookmarks.exists?(hike_route_id: hike.id) : false
+      payload[:data][:is_owner] = @current_user ? (hike.user_id == @current_user.id) : false
 
       render json: payload
     else
