@@ -31,6 +31,13 @@ class HikeRoutesController < ApiController
       scope = scope.where.not(user_id: blocked)
     end
 
+    # Filter po tagovima: ?tags=vodopad,jezero → rute koje imaju SVE izabrane (AND).
+    if params[:tags].present?
+      wanted = Array(params[:tags].is_a?(String) ? params[:tags].split(",") : params[:tags])
+                 .map { |t| t.to_s.strip.downcase }.reject(&:blank?) & HikeRoute::ALLOWED_TAGS
+      scope = scope.where("hike_routes.tags @> ARRAY[?]::varchar[]", wanted) if wanted.any?
+    end
+
     total  = scope.except(:select, :group, :order).count("DISTINCT hike_routes.id")
     routes = scope.limit(per_page).offset((page - 1) * per_page).to_a
 
@@ -690,7 +697,7 @@ class HikeRoutesController < ApiController
   end
 
   def hike_params
-    params.require(:hike_route).permit(:title, :description, :duration, :difficulty, :distance, :location_latitude, :location_longitude, :best_time_to_visit, :delete_all_images, images: [], existing_images: [], existing_image_ids: [])
+    params.require(:hike_route).permit(:title, :description, :duration, :difficulty, :distance, :location_latitude, :location_longitude, :best_time_to_visit, :delete_all_images, tags: [], images: [], existing_images: [], existing_image_ids: [])
   end
 
   def presigned_url(image)

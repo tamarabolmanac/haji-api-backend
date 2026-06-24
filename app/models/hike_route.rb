@@ -7,7 +7,17 @@ class HikeRoute < ApplicationRecord
   has_many :liked_by_users, through: :route_likes, source: :user
   
   STATUSES = %w[draft tracking finalized].freeze
-  
+
+  # Place characteristics a route can be tagged with. Keys are stored; the
+  # frontend maps them to localized labels + icons.
+  ALLOWED_TAGS = %w[
+    kafic komarci guzva vodopad reka jezero vidikovac odmor
+    suma dostupno vetrovito parking hrana blato insekti
+  ].freeze
+
+  before_validation :normalize_tags
+  validate :tags_must_be_allowed
+
   # Invalidate cache when route is updated
   after_update :invalidate_cache
   # Update user stats when route is finalized or deleted
@@ -97,7 +107,16 @@ class HikeRoute < ApplicationRecord
   end
   
   private
-  
+
+  def normalize_tags
+    self.tags = Array(tags).map { |t| t.to_s.strip.downcase }.reject(&:blank?).uniq
+  end
+
+  def tags_must_be_allowed
+    invalid = tags - ALLOWED_TAGS
+    errors.add(:tags, "sadrži nepoznate vrednosti: #{invalid.join(', ')}") if invalid.any?
+  end
+
   def invalidate_cache
     Rails.cache.delete("hike:#{id}")
   end
