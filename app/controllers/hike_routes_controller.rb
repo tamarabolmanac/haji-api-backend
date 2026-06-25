@@ -38,6 +38,22 @@ class HikeRoutesController < ApiController
       scope = scope.where("hike_routes.tags @> ARRAY[?]::varchar[]", wanted) if wanted.any?
     end
 
+    # Pretraga po nazivu/opisu.
+    if params[:q].present?
+      term = "%#{params[:q].to_s.strip}%"
+      scope = scope.where("hike_routes.title ILIKE :q OR hike_routes.description ILIKE :q", q: term)
+    end
+
+    # Težina — ista klasifikacija kao frontend diffKey (lako/srednje/teško).
+    case params[:difficulty]
+    when "easy"
+      scope = scope.where("lower(coalesce(hike_routes.difficulty, '')) ~ 'eas|lak'")
+    when "hard"
+      scope = scope.where("lower(coalesce(hike_routes.difficulty, '')) ~ 'hard|teš|tes'")
+    when "medium"
+      scope = scope.where("lower(coalesce(hike_routes.difficulty, '')) !~ 'eas|lak|hard|teš|tes'")
+    end
+
     total  = scope.except(:select, :group, :order).count("DISTINCT hike_routes.id")
     routes = scope.limit(per_page).offset((page - 1) * per_page).to_a
 
