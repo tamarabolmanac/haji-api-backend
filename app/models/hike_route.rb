@@ -108,11 +108,19 @@ class HikeRoute < ApplicationRecord
   
   private
 
+  # The `tags` column may not be deployed everywhere yet (e.g. prod before its
+  # migration) — guard so create/update still works there.
+  def tags_column?
+    self.class.column_names.include?("tags")
+  end
+
   def normalize_tags
+    return unless tags_column?
     self.tags = Array(tags).map { |t| t.to_s.strip.downcase }.reject(&:blank?).uniq
   end
 
   def tags_must_be_allowed
+    return unless tags_column?
     invalid = tags - ALLOWED_TAGS
     errors.add(:tags, "sadrži nepoznate vrednosti: #{invalid.join(', ')}") if invalid.any?
   end

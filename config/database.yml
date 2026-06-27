@@ -20,13 +20,11 @@ default: &default
   host: localhost
 
 development:
-  adapter: postgresql
-  encoding: unicode
-  database: hajki_db_dev
-  username: postgres
-  password: password
-  host: localhost
-  port: 5432
+  # Driven by DATABASE_URL (like production), with a local-dev fallback.
+  # Without this, the explicit keys below would override DATABASE_URL and the
+  # app would always hit the local dev DB regardless of .env.
+  url: <%= ENV.fetch("DATABASE_URL", "postgres://postgres:password@db:5432/hajki_db_dev") %>
+  pool: 5
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
