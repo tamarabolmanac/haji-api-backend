@@ -171,7 +171,38 @@ class HikeRoutesController < ApiController
       render json: { status: 500, message: "Server error" }
     end
   end
-  
+
+  # POST /routes/import_gpx — multipart upload of a .gpx file. Creates a
+  # finalized route (distance/duration computed from the track) and enqueues
+  # elevation enrichment.
+  def import_gpx
+    file = params[:gpx]
+    unless file.respond_to?(:read)
+      return render json: { status: 422, message: "Nedostaje GPX fajl." }, status: :unprocessable_entity
+    end
+
+    route = GpxImporter.create_route(
+      user: @current_user,
+      gpx: file.read,
+      title: params[:title],
+      difficulty: params[:difficulty],
+      tags: params[:tags],
+      description: params[:description],
+    )
+
+    # Elevation needs a slow external DEM lookup — do it in the background.
+    begin
+      ElevationJob.perform_later(route.id)
+    rescue => e
+      Rails.logger.warn("import_gpx: elevation enqueue failed: #{e.message}")
+    end
+
+    render json: { id: route.id, status: 201, message: "Ruta uvezena" }, status: :created
+  rescue => e
+    Rails.logger.error("import_gpx failed: #{e.class}: #{e.message}")
+    render json: { status: 422, message: e.message }, status: :unprocessable_entity
+  end
+
   def show
     hike = HikeRoute.includes(:points, :user).find_by(id: params[:id])
     if hike

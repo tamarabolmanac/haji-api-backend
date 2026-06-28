@@ -60,6 +60,7 @@ Rails.application.routes.draw do
   
   # Route tracking
   post "/routes/start_new", to: "hike_routes#start_new"
+  post "/routes/import_gpx", to: "hike_routes#import_gpx"
   post "/routes/track_point", to: "hike_routes#track_point"
   post "/routes/track_points_bulk", to: "hike_routes#track_points_bulk"
   post "/routes/:id/start_tracking", to: "hike_routes#start_tracking"
