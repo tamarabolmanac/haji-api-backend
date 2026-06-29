@@ -176,6 +176,10 @@ class HikeRoutesController < ApiController
   # finalized route (distance/duration computed from the track) and enqueues
   # elevation enrichment.
   def import_gpx
+    unless @current_user&.role == "admin"
+      return render json: { status: 403, message: "Uvoz GPX ruta je dozvoljen samo administratorima." }, status: :forbidden
+    end
+
     file = params[:gpx]
     unless file.respond_to?(:read)
       return render json: { status: 422, message: "Nedostaje GPX fajl." }, status: :unprocessable_entity
@@ -254,8 +258,28 @@ class HikeRoutesController < ApiController
     hike = HikeRoute.includes(:points).find_by(id: params[:id])
     return render(json: { status: 404, message: "Route not found" }, status: :not_found) unless hike
 
-    profile = Rails.cache.fetch("hike:#{hike.id}:elevation", expires_in: 1.hour) do
-      ElevationService.new(hike).profile
+    # Never block the request on the slow external DEM lookup. Return only the
+    # elevations already persisted on the points; if any are still missing,
+    # enqueue ElevationJob (deduped, at most once per 10 min) to backfill them
+    # in the background. The job deletes the cache below when it finishes.
+    missing = hike.points.where(elevation: nil).exists?
+
+    if missing
+      enqueue_key = "hike:#{hike.id}:elev_enqueued"
+      unless Rails.cache.exist?(enqueue_key)
+        Rails.cache.write(enqueue_key, 1, expires_in: 10.minutes)
+        begin
+          ElevationJob.perform_later(hike.id)
+        rescue => e
+          Rails.logger.warn("elevation: enqueue failed: #{e.message}")
+        end
+      end
+      # Don't cache an incomplete profile — recompute until the job fills it in.
+      profile = ElevationService.new(hike).profile(backfill: false)
+    else
+      profile = Rails.cache.fetch("hike:#{hike.id}:elevation", expires_in: 1.hour) do
+        ElevationService.new(hike).profile(backfill: false)
+      end
     end
 
     render json: { data: profile, status: 200, message: "Success" }

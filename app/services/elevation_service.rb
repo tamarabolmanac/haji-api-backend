@@ -19,11 +19,14 @@ class ElevationService
     @hike_route = hike_route
   end
 
-  def profile
+  # backfill: true performs the slow external DEM lookup (only safe in a
+  # background job — never in a web request). backfill: false returns whatever
+  # elevations are already persisted, so the endpoint can respond instantly.
+  def profile(backfill: true)
     points = @hike_route.points.order(:timestamp).to_a
     return [] if points.empty?
 
-    backfill_missing!(points)
+    backfill_missing!(points) if backfill
 
     cumulative = 0.0
     prev = nil
