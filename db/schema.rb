@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_24_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_06_30_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "cube"
   enable_extension "earthdistance"
@@ -315,6 +315,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_24_120000) do
     t.integer "total_duration", default: 0, null: false
   end
 
+  create_table "waypoints", force: :cascade do |t|
+    t.bigint "hike_route_id", null: false
+    t.string "kind", null: false
+    t.string "label"
+    t.float "latitude", null: false
+    t.float "longitude", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["hike_route_id"], name: "index_waypoints_on_hike_route_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "hike_routes", "users"
@@ -337,4 +348,5 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_24_120000) do
   add_foreign_key "user_blocks", "users", column: "blocker_id"
   add_foreign_key "user_follows", "users", column: "followed_id"
   add_foreign_key "user_follows", "users", column: "follower_id"
+  add_foreign_key "waypoints", "hike_routes"
 end

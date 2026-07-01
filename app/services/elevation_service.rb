@@ -46,6 +46,7 @@ class ElevationService
     missing = points.select { |p| p.elevation.nil? }
     return if missing.empty?
 
+    updates = {} # point_id => elevation
     missing.each_slice(BATCH) do |batch|
       locations = batch.map { |p| "#{p.lat},#{p.lng}" }.join("|")
       results = fetch(locations)
@@ -53,11 +54,33 @@ class ElevationService
 
       batch.each_with_index do |p, i|
         ele = results.dig(i, "elevation")
-        p.update_column(:elevation, ele) unless ele.nil?
+        next if ele.nil?
+        p.elevation = ele # keep in-memory so the returned profile is complete
+        updates[p.id] = ele
       end
     end
+
+    persist_elevations!(updates)
   rescue => e
     Rails.logger.warn("[ElevationService] backfill failed: #{e.class}: #{e.message}")
+  end
+
+  # Persist all fetched elevations in a few bulk UPDATEs (one per chunk) instead
+  # of one round-trip per point. Critical when the DB is remote (Supabase): a
+  # dense route with 10k points would otherwise mean 10k UPDATE round-trips.
+  # ids/elevations are coerced to Integer/Float, so the inlined VALUES are safe.
+  def persist_elevations!(updates)
+    return if updates.empty?
+
+    updates.each_slice(500) do |chunk|
+      values = chunk.map { |id, ele| "(#{id.to_i}, #{ele.to_f})" }.join(",")
+      sql = <<~SQL.squish
+        UPDATE points AS p SET elevation = v.ele
+        FROM (VALUES #{values}) AS v(id, ele)
+        WHERE p.id = v.id
+      SQL
+      Point.connection.execute(sql)
+    end
   end
 
   def fetch(locations)

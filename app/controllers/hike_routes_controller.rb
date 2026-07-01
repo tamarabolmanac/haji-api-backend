@@ -244,6 +244,8 @@ class HikeRoutesController < ApiController
       payload[:data][:liked_by_current_user] = @current_user ? hike.route_likes.exists?(user_id: @current_user.id) : false
       payload[:data][:bookmarked_by_current_user] = @current_user ? @current_user.route_bookmarks.exists?(hike_route_id: hike.id) : false
       payload[:data][:is_owner] = @current_user ? (hike.user_id == @current_user.id) : false
+      # Kept outside the cache so added/removed markers show up immediately.
+      payload[:data][:waypoints] = waypoints_table? ? hike.waypoints.order(:created_at).map(&:as_marker_json) : []
 
       render json: payload
     else
@@ -283,6 +285,48 @@ class HikeRoutesController < ApiController
     end
 
     render json: { data: profile, status: 200, message: "Success" }
+  end
+
+  # GET /routes/:id/waypoints
+  def waypoints
+    hike = HikeRoute.find_by(id: params[:id])
+    return render(json: { status: 404, message: "Route not found" }, status: :not_found) unless hike
+    return render(json: { data: [], status: 200, message: "Success" }) unless waypoints_table?
+
+    render json: { data: hike.waypoints.order(:created_at).map(&:as_marker_json), status: 200, message: "Success" }
+  end
+
+  # POST /routes/:id/waypoints — owner only
+  def create_waypoint
+    hike = HikeRoute.find_by(id: params[:id])
+    return render(json: { status: 404, message: "Route not found" }, status: :not_found) unless hike
+    return render(json: { status: 403, message: "Samo vlasnik rute može da dodaje oznake." }, status: :forbidden) unless hike.user_id == @current_user&.id
+    return render(json: { status: 503, message: "Oznake još nisu dostupne (migracija nije pokrenuta)." }, status: :service_unavailable) unless waypoints_table?
+
+    wp = hike.waypoints.build(
+      kind: params[:kind],
+      label: params[:label].presence,
+      latitude: params[:lat],
+      longitude: params[:lng],
+    )
+    if wp.save
+      Rails.cache.delete("hike:#{hike.id}")
+      render json: { data: wp.as_marker_json, status: 201, message: "Oznaka dodata" }, status: :created
+    else
+      render json: { status: 422, message: wp.errors.full_messages.join(", ") }, status: :unprocessable_entity
+    end
+  end
+
+  # DELETE /routes/:id/waypoints/:waypoint_id — owner only
+  def destroy_waypoint
+    hike = HikeRoute.find_by(id: params[:id])
+    return render(json: { status: 404, message: "Route not found" }, status: :not_found) unless hike
+    return render(json: { status: 403, message: "Samo vlasnik rute može da briše oznake." }, status: :forbidden) unless hike.user_id == @current_user&.id
+    return render(json: { status: 200, message: "OK" }) unless waypoints_table?
+
+    hike.waypoints.where(id: params[:waypoint_id]).delete_all
+    Rails.cache.delete("hike:#{hike.id}")
+    render json: { status: 200, message: "Oznaka obrisana" }
   end
 
   def update
@@ -707,6 +751,15 @@ class HikeRoutesController < ApiController
   end
   
   private
+
+  # The waypoints table may not exist yet on environments that haven't run the
+  # migration (e.g. prod before deploy). Guard reads/writes so nothing breaks.
+  def waypoints_table?
+    return @waypoints_table if defined?(@waypoints_table)
+    @waypoints_table = ActiveRecord::Base.connection.table_exists?(:waypoints)
+  rescue StandardError
+    @waypoints_table = false
+  end
 
   def likes_counts_for(routes)
     ids = routes.map(&:id)
