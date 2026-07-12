@@ -10,9 +10,17 @@ require "json"
 #   [{ lat:, lng:, elevation:, distance_m: }, ...]
 # where `distance_m` is cumulative distance along the track.
 class ElevationService
+  # Raised when one or more DEM batches couldn't be fetched (network/API down).
+  # Whatever was fetched is already persisted, so a retry only re-queries the
+  # points that are still missing — ElevationJob retries on this.
+  class FetchError < StandardError; end
+
   BASE_URL = ENV.fetch("OPENTOPODATA_URL", "http://opentopodata:5000")
   DATASET  = ENV.fetch("OPENTOPODATA_DATASET", "srtm30m")
   BATCH    = 100 # OpenTopoData default max_locations_per_request
+  # Public api.opentopodata.org allows 1 req/s — set OPENTOPODATA_THROTTLE_S=1
+  # there. Self-hosted needs no throttle (0).
+  THROTTLE_S = ENV.fetch("OPENTOPODATA_THROTTLE_S", "0").to_f
   EARTH_R  = 6_371_000.0 # meters
 
   def initialize(hike_route)
@@ -40,17 +48,24 @@ class ElevationService
   private
 
   # Query OpenTopoData for any point that doesn't yet have an elevation, in
-  # batches, and persist the result. Failures are logged and left as nil so the
-  # map still renders.
+  # batches, and persist the result. Successful batches are persisted even when
+  # others fail; a FetchError at the end makes the enclosing job retry, and the
+  # retry only re-queries the points still missing.
   def backfill_missing!(points)
     missing = points.select { |p| p.elevation.nil? }
     return if missing.empty?
 
+    failed_batches = 0
+    total_batches = 0
     updates = {} # point_id => elevation
     missing.each_slice(BATCH) do |batch|
+      total_batches += 1
       locations = batch.map { |p| "#{p.lat},#{p.lng}" }.join("|")
       results = fetch(locations)
-      next unless results
+      if results.nil?
+        failed_batches += 1
+        next
+      end
 
       batch.each_with_index do |p, i|
         ele = results.dig(i, "elevation")
@@ -58,11 +73,16 @@ class ElevationService
         p.elevation = ele # keep in-memory so the returned profile is complete
         updates[p.id] = ele
       end
+
+      sleep(THROTTLE_S) if THROTTLE_S.positive?
     end
 
     persist_elevations!(updates)
-  rescue => e
-    Rails.logger.warn("[ElevationService] backfill failed: #{e.class}: #{e.message}")
+
+    if failed_batches.positive?
+      raise FetchError,
+            "route #{@hike_route.id}: #{failed_batches}/#{total_batches} elevation batches failed"
+    end
   end
 
   # Persist all fetched elevations in a few bulk UPDATEs (one per chunk) instead

@@ -5,6 +5,10 @@
 class ElevationJob < ApplicationJob
   queue_as :default
   discard_on ActiveJob::DeserializationError
+  # Partial/failed DEM fetches (bad network, API down) raise FetchError after
+  # persisting what succeeded — retry with backoff finishes the missing points.
+  # Waits roughly: 3s, 18s, 1.5min, 4.5min.
+  retry_on ElevationService::FetchError, wait: :polynomially_longer, attempts: 5
 
   def perform(hike_route_id)
     route = HikeRoute.find_by(id: hike_route_id)
