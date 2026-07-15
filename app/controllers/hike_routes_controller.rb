@@ -92,20 +92,30 @@ class HikeRoutesController < ApiController
   def my_routes
     routes = @current_user.hike_routes
                           .left_joins(:points)
+                          .includes({ user: { avatar_attachment: :blob } }, images_attachments: :blob)
                           .select('hike_routes.*, COUNT(points.id) AS points_count')
                           .group('hike_routes.id')
                           .to_a
     likes_counts = likes_counts_for(routes)
     liked_route_ids = liked_route_ids_for(routes)
+    bookmarked_route_ids = bookmarked_route_ids_for(routes)
 
     user_routes = routes.map do |route|
+      author = route.user
       route.as_json.merge(
         distance: route.distance,
         duration: route.duration,
         calculated_from_points: route.points_count >= 2,
         points_count: route.points_count,
         likes_count: likes_counts[route.id] || 0,
-        liked_by_current_user: liked_route_ids.include?(route.id)
+        liked_by_current_user: liked_route_ids.include?(route.id),
+        bookmarked_by_current_user: bookmarked_route_ids.include?(route.id),
+        thumbnail_url: route.images.attached? ? presigned_url(route.images.first) : nil,
+        author: author ? {
+          id: author.id,
+          name: author.name,
+          avatar_url: author.avatar&.attached? ? avatar_url_for(author) : nil
+        } : nil
       )
     end
     render json: { data: user_routes, status: 200, message: "Success" }
@@ -129,6 +139,7 @@ class HikeRoutesController < ApiController
     scope = HikeRoute
       .where(id: route_ids)
       .left_joins(:points)
+      .includes({ user: { avatar_attachment: :blob } }, images_attachments: :blob)
       .select('hike_routes.*, COUNT(points.id) AS points_count')
       .group('hike_routes.id')
 
@@ -139,15 +150,24 @@ class HikeRoutesController < ApiController
     routes = scope.to_a
     likes_counts = likes_counts_for(routes)
     liked_route_ids = liked_route_ids_for(routes)
+    bookmarked_route_ids = bookmarked_route_ids_for(routes)
 
     nearby_routes = routes.map do |route|
+      author = route.user
       route.as_json.merge(
         distance: route.distance,
         duration: route.duration,
         calculated_from_points: route.points_count >= 2,
         points_count: route.points_count,
         likes_count: likes_counts[route.id] || 0,
-        liked_by_current_user: liked_route_ids.include?(route.id)
+        liked_by_current_user: liked_route_ids.include?(route.id),
+        bookmarked_by_current_user: bookmarked_route_ids.include?(route.id),
+        thumbnail_url: route.images.attached? ? presigned_url(route.images.first) : nil,
+        author: author ? {
+          id: author.id,
+          name: author.name,
+          avatar_url: author.avatar&.attached? ? avatar_url_for(author) : nil
+        } : nil
       )
     end
 
