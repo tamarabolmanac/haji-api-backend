@@ -60,24 +60,24 @@ class AuthController < ActionController::API
 
     if user && user.authenticate(login_params[:password])
       if !user.confirmed?
-        return render json: { 
-          status: 401, 
+        return render json: {
+          status: 401,
           message: "User not confirmed"
-        }
+        }, status: :unauthorized
       else
         token = JwtAuthenticator.new.encode(user)
-        render json: { 
-          status: 200, 
+        render json: {
+          status: 200,
           message: "User logged in successfully",
           token: token,
           user_id: user.id
         }
       end
     else
-      render json: { 
-        status: 401, 
+      render json: {
+        status: 401,
         message: "Invalid credentials"
-      }
+      }, status: :unauthorized
     end
   end
 
