@@ -107,12 +107,15 @@ class UsersController < ApiController
   end
 
   def forgot_password
+    locale = params[:locale].to_s == "en" ? "en" : "sr"
     @user = User.find_by(email: params[:email])
     if @user
-      @user.send_password_reset_email!
-      render json: { message: "Email za reset lozinke je poslat." }, status: :ok
+      @user.send_password_reset_email!(locale: locale)
+      message = locale == "en" ? "Password reset email has been sent." : "Email za reset lozinke je poslat."
+      render json: { message: message }, status: :ok
     else
-      render json: { message: "Korisnik sa unetim emailom nije pronadjen." }, status: :not_found
+      message = locale == "en" ? "No user found with that email." : "Korisnik sa unetim emailom nije pronadjen."
+      render json: { message: message }, status: :not_found
     end
   end
 
@@ -203,8 +206,10 @@ class UsersController < ApiController
       return
     end
 
-    @current_user.send_deletion_confirmation_email!
-    render json: { message: "Email za potvrdu brisanja naloga je poslat." }, status: :ok
+    locale = params[:locale].to_s == "en" ? "en" : "sr"
+    @current_user.send_deletion_confirmation_email!(locale: locale)
+    message = locale == "en" ? "Account deletion confirmation email has been sent." : "Email za potvrdu brisanja naloga je poslat."
+    render json: { message: message }, status: :ok
   end
 
   def confirm_deletion

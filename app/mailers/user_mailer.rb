@@ -8,17 +8,22 @@ class UserMailer < ApplicationMailer
     mail to: @user.email, subject: "Hajki account confirmation Instructions"
   end
 
-  def reset_password(user, confirmation_token)
+  # locale: "sr" | "en" — follows the language the user had selected in the app.
+  def reset_password(user, confirmation_token, locale: "sr")
     @user = user
     @confirmation_token = confirmation_token
+    @locale = locale.to_s == "en" ? "en" : "sr"
 
-    mail to: @user.email, subject: "Reset Password Instructions"
+    subject = @locale == "en" ? "Hajki — password reset" : "Hajki — reset lozinke"
+    mail to: @user.email, subject: subject
   end
 
-  def deletion_confirmation(user, token)
+  def deletion_confirmation(user, token, locale: "sr")
     @user = user
     @token = token
+    @locale = locale.to_s == "en" ? "en" : "sr"
 
-    mail to: @user.email, subject: "Potvrda brisanja Hajki naloga"
+    subject = @locale == "en" ? "Confirm Hajki account deletion" : "Potvrda brisanja Hajki naloga"
+    mail to: @user.email, subject: subject
   end
 end

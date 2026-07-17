@@ -1,18 +1,19 @@
 <!-- app/views/user_mailer/deletion_confirmation.html.erb -->
+<% en = @locale == "en" %>
 <!DOCTYPE html>
 <html>
   <body style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
     <div style="text-align: center; margin-bottom: 30px;">
-      <h2 style="color: #556B2F; margin-bottom: 10px;">Hajki</h2>
-      <h1 style="color: #333; font-size: 24px; margin-bottom: 20px;">Brisanje naloga</h1>
+      <h2 style="color: #11998e; margin-bottom: 10px; letter-spacing: 3px;">HAJKI</h2>
+      <h1 style="color: #333; font-size: 24px; margin-bottom: 20px;"><%= en ? "Account deletion" : "Brisanje naloga" %></h1>
     </div>
 
     <p>
-      Zdravo <%= @user.name.presence || "planinaru" %>,
+      <%= en ? "Hi" : "Zdravo" %> <%= @user.name.presence || (en ? "hiker" : "planinaru") %>,
     </p>
 
     <p>
-      Primili smo zahtev za brisanje tvog Hajki naloga. Ako zaista želiš da obrišeš nalog, klikni na dugme ispod:
+      <%= en ? "We received a request to delete your Hajki account. If you really want to delete it, click the button below:" : "Primili smo zahtev za brisanje tvog Hajki naloga. Ako zaista želiš da obrišeš nalog, klikni na dugme ispod:" %>
     </p>
 
     <div style="text-align: center; margin: 30px 0;">
@@ -26,16 +27,17 @@
                 font-size: 16px;
                 display: inline-block;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        Potvrdi brisanje naloga
+        <%= en ? "Confirm account deletion" : "Potvrdi brisanje naloga" %>
       </a>
     </div>
 
     <p style="background-color: #fff5f5; padding: 15px; border-radius: 6px; border-left: 4px solid #e53935;">
-      <strong>Upozorenje:</strong> Ova akcija je nepovratna. Svi tvoji podaci, rute i slike biće trajno obrisani. Link je važeći 24 sata.
+      <strong><%= en ? "Warning:" : "Upozorenje:" %></strong>
+      <%= en ? "This action is irreversible. All your data, routes and photos will be permanently deleted. The link is valid for 24 hours." : "Ova akcija je nepovratna. Svi tvoji podaci, rute i slike biće trajno obrisani. Link je važeći 24 sata." %>
     </p>
 
     <p>
-      Ako nisi tražio/la brisanje naloga, možeš bezbedno ignorisati ovaj email — nalog neće biti obrisan.
+      <%= en ? "If you did not request account deletion, you can safely ignore this email — your account will not be deleted." : "Ako nisi tražio/la brisanje naloga, možeš bezbedno ignorisati ovaj email — nalog neće biti obrisan." %>
     </p>
 
     <p style="background-color: #f1f3f4; padding: 10px; border-radius: 4px; word-break: break-all; font-size: 12px;">
@@ -45,8 +47,8 @@
     <hr style="margin: 40px 0; border: none; border-top: 1px solid #e0e0e0;">
 
     <div style="text-align: center; color: #666; font-size: 14px;">
-      <p>Pozdrav iz Hajki tima! 🌲</p>
-      <p>Ovaj email je automatski generisan. Molimo ne odgovarajte na njega.</p>
+      <p><%= en ? "Greetings from the Hajki team!" : "Pozdrav iz Hajki tima!" %> 🌲</p>
+      <p><%= en ? "This email was generated automatically. Please do not reply to it." : "Ovaj email je automatski generisan. Molimo ne odgovarajte na njega." %></p>
     </div>
   </body>
 </html>

@@ -31,12 +31,12 @@ class User < ApplicationRecord
     UserMailer.confirmation(self, generate_confirmation_token).deliver_later
   end
 
-  def send_password_reset_email!
-    UserMailer.reset_password(self, generate_password_reset_token).deliver_later
+  def send_password_reset_email!(locale: "sr")
+    UserMailer.reset_password(self, generate_password_reset_token, locale: locale).deliver_later
   end
 
-  def send_deletion_confirmation_email!
-    UserMailer.deletion_confirmation(self, generate_deletion_token).deliver_later
+  def send_deletion_confirmation_email!(locale: "sr")
+    UserMailer.deletion_confirmation(self, generate_deletion_token, locale: locale).deliver_later
   end
 
   def confirm!
