@@ -533,9 +533,35 @@ class HikeRoutesController < ApiController
         end
       end
 
+      client_uuid = params[:client_uuid].to_s.strip.presence
+
+      # Idempotentnost: ako je tačka sa ovim client_uuid već sačuvana (npr. retry
+      # posle izgubljenog odgovora, ili offline dosinhronizacija), ne pravi duplikat —
+      # vrati postojeću kao uspeh. Bez client_uuid → ponašanje kao pre (unazad kompatibilno).
+      if client_uuid
+        existing = hike_route.points.find_by(client_uuid: client_uuid)
+        if existing
+          Rails.logger.info "↩︎ Duplicate point (client_uuid=#{client_uuid}) ignored for route #{hike_route.id}"
+          render json: {
+            status: 200,
+            message: "Point already saved (duplicate ignored)",
+            route_id: hike_route.id,
+            point: { id: existing.id, lat: existing.lat, lng: existing.lng, timestamp: existing.timestamp },
+            route_stats: {
+              distance: hike_route.distance,
+              duration: hike_route.duration,
+              points_count: hike_route.points.count,
+              calculated_from_points: hike_route.points.count >= 2
+            }
+          }
+          return
+        end
+      end
+
       point = hike_route.points.build(
         lat: params[:latitude],
         lng: params[:longitude],
+        client_uuid: client_uuid,
         # accuracy: params[:accuracy],  # TODO: Add after migration
         timestamp: parse_point_timestamp(params[:timestamp])
         # user: @current_user  # TODO: Add after migration (currently nil)
@@ -584,6 +610,18 @@ class HikeRoutesController < ApiController
       Rails.logger.error "❌ Route not found: #{e.message}"
       Rails.logger.info "=== TRACK_POINT DEBUG END (NOT FOUND) ==="
       render json: { status: 404, message: "Route not found" }
+    rescue ActiveRecord::RecordNotUnique
+      # Trka: ista tačka (client_uuid) je ubačena drugim (paralelnim) zahtevom u
+      # međuvremenu → tretiraj kao uspeh, ne kao grešku (idempotentno).
+      cu = params[:client_uuid].to_s.strip.presence
+      existing = cu && hike_route&.points&.find_by(client_uuid: cu)
+      Rails.logger.info "↩︎ Concurrent duplicate point (client_uuid=#{cu}) treated as success"
+      render json: {
+        status: 200,
+        message: "Point already saved (duplicate ignored)",
+        route_id: hike_route&.id,
+        point: existing && { id: existing.id, lat: existing.lat, lng: existing.lng, timestamp: existing.timestamp }
+      }
     rescue => e
       Rails.logger.error "❌ Error in track_point: #{e.message}"
       Rails.logger.error "❌ Backtrace: #{e.backtrace.first(5).join('\n')}"
