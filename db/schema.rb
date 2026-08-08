@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_30_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_07_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "cube"
   enable_extension "earthdistance"
@@ -79,6 +79,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_30_120000) do
     t.bigint "user_id"
     t.string "status", default: "draft", null: false
     t.string "tags", default: [], null: false, array: true
+    t.string "activity_type", default: "hike", null: false
     t.index ["tags"], name: "index_hike_routes_on_tags", using: :gin
     t.index ["user_id"], name: "index_hike_routes_on_user_id"
   end

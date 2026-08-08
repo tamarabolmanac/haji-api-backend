@@ -6,6 +6,9 @@ class HikeRoute < ApplicationRecord
   has_many :route_likes, dependent: :delete_all
   has_many :route_bookmarks, dependent: :delete_all
   has_many :liked_by_users, through: :route_likes, source: :user
+
+  # Tip aktivnosti: pešačenje ("hike") ili biciklizam ("bike"). Default je "hike".
+  validates :activity_type, inclusion: { in: %w[hike bike] }
   
   STATUSES = %w[draft tracking finalized].freeze
 
@@ -56,26 +59,22 @@ class HikeRoute < ApplicationRecord
   
   # Get the appropriate distance (stored or calculated as fallback)
   def display_distance
-    # If we have stored distance and at least 2 points, use stored value
-    if distance.present? && points.count >= 2
-      distance
-    elsif points.count >= 2
-      # Fallback to calculation if stored value is missing
-      calculated_distance
+    if points.count >= 2
+      # Sačuvanu vrednost koristimo samo ako je stvarno izračunata (> 0, tj.
+      # ruta je finalizovana). Za rute koje su tek sinhronizovane a još nisu
+      # finalizovane (stored = 0), računamo iz tačaka da ne pokažemo "0 km".
+      (distance.present? && distance.to_f > 0) ? distance : calculated_distance
     else
       # Use manually entered distance for routes with < 2 points
       distance || 0
     end
   end
-  
+
   # Get the appropriate duration (stored or calculated as fallback)
   def display_duration
-    # If we have stored duration and at least 2 points, use stored value
-    if duration.present? && points.count >= 2
-      duration
-    elsif points.count >= 2
-      # Fallback to calculation if stored value is missing
-      calculated_duration
+    if points.count >= 2
+      # Isto kao za distancu — dok nije finalizovano (stored = 0), računaj iz tačaka.
+      (duration.present? && duration.to_i > 0) ? duration : calculated_duration
     else
       # Use manually entered duration for routes with < 2 points
       duration || 0

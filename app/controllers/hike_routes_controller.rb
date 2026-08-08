@@ -54,6 +54,11 @@ class HikeRoutesController < ApiController
       scope = scope.where("lower(coalesce(hike_routes.difficulty, '')) !~ 'eas|lak|hard|teš|tes'")
     end
 
+    # Tip aktivnosti — "hike" ili "bike". Bez parametra (ili nešto drugo) → sve.
+    if %w[hike bike].include?(params[:activity])
+      scope = scope.where("hike_routes.activity_type = ?", params[:activity])
+    end
+
     total  = scope.except(:select, :group, :order).count("DISTINCT hike_routes.id")
     routes = scope.limit(per_page).offset((page - 1) * per_page).to_a
 
@@ -381,7 +386,7 @@ class HikeRoutesController < ApiController
           hike_route.images.attach(process_upload_image(img))
         end
       end
-
+      
       render json: { 
         status: 200, 
         message: "Route updated successfully",
@@ -879,7 +884,7 @@ class HikeRoutesController < ApiController
   end
 
   def hike_params
-    params.require(:hike_route).permit(:title, :description, :duration, :difficulty, :distance, :location_latitude, :location_longitude, :best_time_to_visit, :delete_all_images, tags: [], images: [], existing_images: [], existing_image_ids: [])
+    params.require(:hike_route).permit(:title, :description, :duration, :difficulty, :distance, :location_latitude, :location_longitude, :best_time_to_visit, :activity_type, :delete_all_images, tags: [], images: [], existing_images: [], existing_image_ids: [])
   end
 
   def presigned_url(image)
