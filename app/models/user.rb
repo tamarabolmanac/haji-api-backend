@@ -27,6 +27,17 @@ class User < ApplicationRecord
   validates :city, presence: true
   validates :country, presence: true
 
+  # Ukupna distanca/trajanje se RAČUNAJU iz ruta pri svakom čitanju — bez oslanjanja
+  # na keširane kolone total_distance/total_duration (one su znale da zastare jer se
+  # finalize_route! radi preko update_columns, koji preskače callback-ove).
+  def computed_total_distance
+    hike_routes.sum(:distance).to_f.round(2)
+  end
+
+  def computed_total_duration
+    hike_routes.sum(:duration).to_i
+  end
+
   def send_confirmation_email!
     UserMailer.confirmation(self, generate_confirmation_token).deliver_later
   end

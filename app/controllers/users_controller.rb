@@ -25,8 +25,8 @@ class UsersController < ApiController
       }
     end
 
-    total_distance = user.total_distance.to_f
-    total_duration = user.total_duration.to_i
+    total_distance = user.computed_total_distance
+    total_duration = user.computed_total_duration
 
     payload = {
       id: user.id,
@@ -75,8 +75,8 @@ class UsersController < ApiController
       city: @current_user.city,
       country: @current_user.country,
       avatar_url: avatar_url_for(@current_user),
-      total_distance: @current_user.total_distance.to_f,
-      total_duration: @current_user.total_duration.to_i,
+      total_distance: @current_user.computed_total_distance,
+      total_duration: @current_user.computed_total_duration,
       routes_count: routes_count
     }
     render json: user_data, status: :ok

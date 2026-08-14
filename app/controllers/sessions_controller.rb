@@ -60,7 +60,7 @@ class SessionsController < ApplicationController
         httponly: true,
         secure: Rails.env.production?,
         same_site: :strict,
-        expires: 1.week.from_now
+        expires: 15.days.from_now
       }
       
       render json: { 
