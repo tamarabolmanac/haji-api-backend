@@ -16,7 +16,7 @@ class HikeRoute < ApplicationRecord
   # frontend maps them to localized labels + icons.
   ALLOWED_TAGS = %w[
     kafic komarci guzva vodopad reka jezero vidikovac odmor
-    suma dostupno vetrovito parking hrana blato insekti
+    suma dostupno vetrovito parking hrana blato insekti plaza
   ].freeze
 
   before_validation :normalize_tags
