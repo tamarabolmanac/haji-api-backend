@@ -171,4 +171,43 @@ class HikeRoutesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :bad_request
   end
+
+  # --- prikaz distance/vremena na karticama (liste) ---
+
+  test "my_routes za nefinalizovanu tracking rutu vraća izračunatu distancu i vreme, ne 0" do
+    route = @user.hike_routes.create!(
+      title: "Zaboravljena ruta", description: "", difficulty: "medium",
+      distance: 0, duration: 0, status: "tracking"
+    )
+    route.points.create!(lat: 44.8000, lng: 20.4000, timestamp: Time.utc(2026, 6, 18, 10, 0, 0))
+    route.points.create!(lat: 44.8100, lng: 20.4100, timestamp: Time.utc(2026, 6, 18, 10, 10, 0))
+
+    get "/my_routes", headers: @auth_headers
+    assert_response :success
+
+    card = JSON.parse(response.body)["data"].find { |r| r["id"] == route.id }
+    assert card, "ruta nije u odgovoru"
+    assert_equal "tracking", card["status"]
+    assert card["distance"].to_f > 0, "distanca bi trebalo da bude izračunata iz tačaka, dobijeno: #{card["distance"].inspect}"
+    assert_equal 10, card["duration"], "vreme bi trebalo da bude izračunato iz tačaka (10 min)"
+  ensure
+    route&.destroy
+  end
+
+  test "my_routes za finalizovanu rutu koristi upisane vrednosti" do
+    route = @user.hike_routes.create!(
+      title: "Gotova ruta", description: "", difficulty: "medium",
+      distance: 5.0, duration: 90, status: "finalized"
+    )
+
+    get "/my_routes", headers: @auth_headers
+    assert_response :success
+
+    card = JSON.parse(response.body)["data"].find { |r| r["id"] == route.id }
+    assert card, "ruta nije u odgovoru"
+    assert_equal "5.0", card["distance"].to_s
+    assert_equal 90, card["duration"]
+  ensure
+    route&.destroy
+  end
 end

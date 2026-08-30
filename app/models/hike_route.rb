@@ -81,6 +81,23 @@ class HikeRoute < ApplicationRecord
     end
   end
   
+  # Vrednosti za prikaz na kartici u listama. Finalizovane rute imaju upisane
+  # distance/duration pa ih koristimo direktno. Rute koje još nisu finalizovane
+  # (upisano 0) a imaju putanju (>= 2 tačke) računamo iz tačaka — isto kao
+  # stranica sa detaljima — da kartica ne pokazuje "0 km / 0 min".
+  #
+  # Koristi points_count iz SELECT-a liste ako je učitan (bez dodatnog COUNT
+  # upita); u suprotnom ga izračuna.
+  def card_distance
+    return distance if stored_stats?
+    list_points_count >= 2 ? calculated_distance : distance
+  end
+
+  def card_duration
+    return duration if stored_stats?
+    list_points_count >= 2 ? calculated_duration : duration
+  end
+
   # Zaključava rutu kao finalized. Ako ima >= 2 tačke, usput izračuna
   # distance/duration iz tačaka; u suprotnom samo postavi status.
   def finalize_route!
@@ -107,6 +124,18 @@ class HikeRoute < ApplicationRecord
   end
   
   private
+
+  # Da li ruta ima stvarno upisanu statistiku (finalizovana). Dok je 0/0,
+  # smatramo da još nije finalizovana pa računamo iz tačaka.
+  def stored_stats?
+    distance.to_f > 0 || duration.to_i > 0
+  end
+
+  # Broj tačaka: preferiraj points_count učitan u SELECT-u liste (nema dodatni
+  # upit); ako ga nema (npr. pojedinačna ruta), izračunaj klasično.
+  def list_points_count
+    has_attribute?(:points_count) ? self[:points_count].to_i : points.count
+  end
 
   # The `tags` column may not be deployed everywhere yet (e.g. prod before its
   # migration) — guard so create/update still works there.

@@ -19,8 +19,8 @@ class UsersController < ApiController
         id: route.id,
         title: route.title,
         description: route.description,
-        distance: route.distance,
-        duration: route.duration,
+        distance: route.card_distance,
+        duration: route.card_duration,
         points_count: route.points_count.to_i
       }
     end

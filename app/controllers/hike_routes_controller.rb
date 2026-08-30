@@ -68,10 +68,12 @@ class HikeRoutesController < ApiController
 
     hike_routes = routes.map do |route|
       author = route.user
+      dist = route.card_distance
+      dur  = route.card_duration
 
       route.as_json.merge(
-        distance: route.distance,
-        duration: route.duration,
+        distance: dist,
+        duration: dur,
         calculated_from_points: route.points_count >= 2,
         points_count: route.points_count,
         likes_count: likes_counts[route.id] || 0,
@@ -107,9 +109,11 @@ class HikeRoutesController < ApiController
 
     user_routes = routes.map do |route|
       author = route.user
+      dist = route.card_distance
+      dur  = route.card_duration
       route.as_json.merge(
-        distance: route.distance,
-        duration: route.duration,
+        distance: dist,
+        duration: dur,
         calculated_from_points: route.points_count >= 2,
         points_count: route.points_count,
         likes_count: likes_counts[route.id] || 0,
@@ -159,9 +163,11 @@ class HikeRoutesController < ApiController
 
     nearby_routes = routes.map do |route|
       author = route.user
+      dist = route.card_distance
+      dur  = route.card_duration
       route.as_json.merge(
-        distance: route.distance,
-        duration: route.duration,
+        distance: dist,
+        duration: dur,
         calculated_from_points: route.points_count >= 2,
         points_count: route.points_count,
         likes_count: likes_counts[route.id] || 0,
@@ -498,9 +504,11 @@ class HikeRoutesController < ApiController
 
     data = routes.map do |route|
       author = route.user
+      dist = route.card_distance
+      dur  = route.card_duration
       route.as_json.merge(
-        distance: route.distance,
-        duration: route.duration,
+        distance: dist,
+        duration: dur,
         calculated_from_points: route.points_count >= 2,
         points_count: route.points_count,
         likes_count: likes_counts[route.id] || 0,
