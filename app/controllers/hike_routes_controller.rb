@@ -185,6 +185,20 @@ class HikeRoutesController < ApiController
     render json: { data: nearby_routes, status: 200, message: "Success" }
   end
 
+  # GET /routes/map_pins — lagana lista SVIH ruta sa koordinatama početne tačke
+  # (location_latitude/longitude) za "Pretraga na mapi". Minimalan payload (bez slika/tačaka).
+  def map_pins
+    scope = HikeRoute.where.not(location_latitude: nil).where.not(location_longitude: nil)
+    if @current_user && (blocked = @current_user.blocked_users.ids).any?
+      scope = scope.where.not(user_id: blocked)
+    end
+    pins = scope.pluck(:id, :title, :location_latitude, :location_longitude, :difficulty, :activity_type)
+                .map do |id, title, lat, lng, difficulty, activity|
+      { id: id, title: title, lat: lat.to_f, lng: lng.to_f, difficulty: difficulty, activity_type: activity }
+    end
+    render json: { data: pins, status: 200, message: "Success" }
+  end
+
   def create
     @hike_route = @current_user.hike_routes.build(hike_params.except(:images))
   

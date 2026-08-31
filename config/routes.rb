@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   
   get "/routes", to: "hike_routes#index"
+  get "/routes/map_pins", to: "hike_routes#map_pins" # MORA pre "/routes/:id" da se ne mapira kao :id
   get "/routes/:id", to: "hike_routes#show"
   get "/routes/:id/elevation", to: "hike_routes#elevation"
   get    "/routes/:id/waypoints", to: "hike_routes#waypoints"
